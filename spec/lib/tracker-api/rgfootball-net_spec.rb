@@ -1,6 +1,8 @@
 # encoding: utf-8
 require 'spec_helper'
 
+include TrackerApi
+
 describe RgFootball do
   before(:each) do
     FakeWeb.allow_net_connect = false
