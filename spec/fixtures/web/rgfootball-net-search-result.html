@@ -1,0 +1,2416 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"><html dir="ltr">
+<head>
+ <title>Трекер</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+ <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="description" content="спортивный торрент трекер, скачать футбол, хоккей, баскетбол, теннис, биатлон, спорт, смотреть футбол онлайн, онлайн трансляции футбола, бесплатно онлайн футбол, евро 2012">
+ <meta name="keywords" content="торрент трекер, игры, скачать, спорт, футбол, хоккей, баскетбол, теннис, биатлон, кхл, sport, онлайн футбол, смотреть футбол онлайн, евро 2012">
+  <link rel="stylesheet" href="./templates/default/css/main.css?v=1" type="text/css">
+<link rel="stylesheet" href="./templates/default/css/ui.css"> 
+
+<link rel="alternate" type="application/rss+xml" title="RSS" href="http://rgfootball.net/rss.php" />
+<link rel="alternate" type="application/atom+xml" title="Atom" href="http://rgfootball.net/rss.php?atom" />
+ <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+ <link rel="search" type="application/opensearchdescription+xml" href="opensearch_desc.xml" title="RGFOOTBALL.NET - Спортивный торрент-трекер. Футбол Онлайн (Forum)" />
+ <link rel="search" type="application/opensearchdescription+xml" href="opensearch_desc_bt.xml" title="RGFOOTBALL.NET - Спортивный торрент-трекер. Футбол Онлайн (Tracker)" />
+ <script type="text/javascript" src="./misc/js/jquery.pack.js"></script>
+ <script type="text/javascript" src="./misc/js/jquery.ui.js"></script>
+ <script type="text/javascript" src="./misc/js/main.js?v=1"></script>
+ <script type="text/javascript" src="./misc/js/bbcode.js?v=1"></script>
+  <script type="text/javascript">
+  var postImg_MaxWidth = screen.width - 202;
+  var postImgAligned_MaxWidth = Math.round(screen.width/3);
+  var attachImg_MaxWidth = screen.width - 280;
+  var ExternalLinks_InNewWindow = '1';
+  var hidePostImg = false;
+
+  function copyText_writeLink(node)
+  {
+  	if (!is_ie) return;
+  	document.write('<p style="float: right;"><a class="txtb" onclick="if (ie_copyTextToClipboard('+node+')) alert(\'Код скопирован в буфер обмена\'); return false;" href="#">скопировать в буфер обмена</a></p>');
+  }
+  function initPostBBCode(context)
+  {
+  	initSpoilers(context);
+  	initExternalLinks(context);
+  	initPostImages(context);
+        initYoutube(context);
+  }
+function initYoutube(context)
+{
+	var apostLink = $('a.postLink', context);
+	for (var i = 0; i < apostLink.length; i++) {
+		if (/^http:\/\/www.youtube.com\/watch\?(.*)?(&?v=([a-z0-9\-_]+))(.*)?|http:\/\/youtu.be\/.+/i.test(apostLink[i].href)) {
+			var a = document.createElement('span');
+			a.className = 'YTLink';
+			a.innerHTML = '<span title="Начать проигрывание на текущей странице" class="YTLinkButton">&#9658;</span>';
+			window.addEvent(a, 'click', function (e) {
+				var vhref = e.target.nextSibling.href.replace(/^http:\/\/www.youtube.com\/watch\?(.*)?(&?v=([a-z0-9\-_]+))(.*)?|http:\/\/youtu.be\//ig, "http://www.youtube.com/embed/$3");
+				var text  = e.target.nextSibling.innerText != "" ? e.target.nextSibling.innerText : e.target.nextSibling.href;
+				$('#Panel_youtube').remove();
+				ypanel('youtube', {
+					title: '<b>' + text + '</b>',
+					resizing: 0,
+					width: 862,
+					height: 550,
+					content: '<iframe width="853" height="510" frameborder="0" allowfullscreen="" src="' + vhref + '?wmode=opaque"></iframe>'
+				});
+			});
+			apostLink[i].parentNode.insertBefore(a, apostLink[i]);
+			a.appendChild(apostLink[i]);
+			if (/<var class="postImg/i.test(apostLink[i].innerHTML)) {
+				$(apostLink[i]).parent().css({
+					backgroundColor: 'transparent',
+					border: 'none'
+				}).find('.YTLinkButton').css({
+					margin: '0px'
+				});
+			}
+		}
+	}
+}
+  function initPostImages(context)
+  {
+  	var context = context || 'body';
+  	if (hidePostImg) return;
+  	var $in_spoilers = $('div.sp-body var.postImg', context);
+  	$('var.postImg', context).not($in_spoilers).each(function(){
+  		var $v = $(this);
+  		var src = $v.attr('title');
+  		var $img = $('<img src="'+ src +'" class="'+ $v.attr('class') +'" alt="pic" />');
+  		$img = fixPostImage($img);
+  		var maxW = ($v.hasClass('postImgAligned')) ? postImgAligned_MaxWidth : postImg_MaxWidth;
+  		$img.bind('click', function(){ return imgFit(this, maxW); });
+  		if (user.opt_js.i_aft_l) {
+  			$('#preload').append($img);
+  			var loading_icon = '<a href="'+ src +'" target="_blank"><img src="images/pic_loading.gif" alt="" /></a>';
+  			$v.html(loading_icon);
+  			if ($.browser.msie) {
+  				$v.after('<wbr>');
+  			}
+  			$img.one('load', function(){
+  				imgFit(this, maxW);
+  				$v.empty().append(this);
+  			});
+  		}
+  		else {
+  			$img.one('load', function(){ imgFit(this, maxW) });
+  			$v.empty().append($img);
+  			if ($.browser.msie) {
+  				$v.after('<wbr>');
+  			}
+  		}
+  	});
+  }
+function initSpoilers(context)
+{
+	$('div.sp-body', context).each(function(){
+		var $sp_body = $(this);
+		var name = this.title || 'скрытый текст';
+		this.title = '';
+		var $sp_head = $('<div class="sp-head folded clickable">'+ name +'</div>');
+		$sp_head.insertBefore($sp_body).click(function(e){
+			if (!$sp_body.hasClass('inited')) {
+				initPostImages($sp_body);
+				var $sp_fold_btn = $('<div class="sp-fold clickable">[свернуть]</div>').click(function(){
+					$.scrollTo($sp_head, { duration:200, axis:'y', offset:-200 });
+					$sp_head.click().animate({opacity: 0.1}, 500).animate({opacity: 1}, 700);
+				});
+				$sp_body.prepend('<div class="clear"></div>').append('<div class="clear"></div>').append($sp_fold_btn).addClass('inited');
+			}
+			if (e.shiftKey) {
+				e.stopPropagation();
+				e.shiftKey = false;
+				var fold = $(this).hasClass('unfolded');
+				$('div.sp-head', $($sp_body.parents('td')[0])).filter( function(){ return $(this).hasClass('unfolded') ? fold : !fold } ).click();
+			}
+			else {
+				$(this).toggleClass('unfolded');
+				$sp_body.slideToggle('fast');
+			}
+		});
+	});
+}
+
+  function initExternalLinks(context)
+  {
+  	var context = context || 'body';
+  	if (ExternalLinks_InNewWindow) {
+  		$("a.postLink:not([href*='"+ window.location.hostname +"/'])", context).attr({ target: '_blank' });
+  		//$("a.postLink:not([@href*='"+ window.location.hostname +"/'])", context).replaceWith('<span style="color: red;">Р РЋРЎРѓРЎвЂ№Р В»Р С”Р С‘ Р В·Р В°Р С—РЎР‚Р ВµРЎвЂ°Р ВµР Р…РЎвЂ№</span>');
+  	}
+  }
+function fixPostImage ($img)
+{
+	var banned_image_hosts = /tinypic|imagebanana|hidebehind|ipicture/i;  // imageshack
+	var src = $img[0].src;
+	if (src.match(banned_image_hosts)) {
+		$img.wrap('<a href="'+ this.src +'" target="_blank"></a>').attr({ src: "http://rgfootball.net/images/smiles/tr_oops.gif", title: "RGFootball.tv" });
+	}
+	return $img;
+}
+
+
+  $(document).ready(function(){
+  	$('div.post_wrap, div.signature').each(function(){ initPostBBCode( $(this) ) });
+  });
+ </script>
+ <script type="text/javascript">
+  var BB            = {};
+  var BB_ROOT       = "./";
+  var cookieDomain  = "";
+  var cookiePath    = "/";
+  var cookieSecure  = 0;
+  var cookiePrefix  = "bb_";
+  var LOGGED_IN     = 0;
+  var InfoWinParams = 'HEIGHT=510,resizable=yes,WIDTH=780';
+
+  var user = {
+  	opt_js: {},
+
+  	set: function(opt, val, days, reload) {
+  		this.opt_js[opt] = val;
+  		setCookie('opt_js', $.toJSON(this.opt_js), days);
+  		if (reload) {
+  			window.location.reload();
+  		}
+  	}
+  }
+  
+  var ajax = new Ajax('./ajax.php', 'POST', 'json');
+
+
+  function getElText (e)
+  {
+  	var t = '';
+  	if (e.textContent !== undefined) { t = e.textContent; } else if (e.innerText !== undefined) { t = e.innerText; } else { t = jQuery(e).text(); }
+  	return t;
+  }
+  function escHTML (txt) {
+  	return txt.replace(/</g, '&lt;');
+  }
+
+  $(document).ready(function(){
+  	$('.tablesorter').tablesorter(); //	{debug: true}
+  });function post2url (url, params) {
+	params = params || {};
+	var f = document.createElement('form');
+	f.setAttribute('method', 'post');
+	f.setAttribute('action', url);
+	params['form_token'] = '';
+	for (var k in params) {
+		var h = document.createElement('input');
+		h.setAttribute('type', 'hidden');
+		h.setAttribute('name', k);
+		h.setAttribute('value', params[k]);
+		f.appendChild(h);
+	}
+	document.body.appendChild(f);
+	f.submit();
+	return false;
+}
+ </script>
+
+ <!--[if lt IE 7]><script type="text/javascript">
+  $(document).ready(ie6_make_clickable_labels);
+
+  $(document).ready(function(){
+  	$('div.menu-sub').prepend('<iframe class="ie-fix-select-overlap"></iframe>'); // iframe for IE select box z-index issue
+  	Menu.iframeFix = true;
+  });
+ </script><![endif]-->
+
+ <!--[if gte IE 7]><style type="text/css">input[type="checkbox"] { margin-bottom: -1px; }</style><![endif]-->
+ <!--[if lte IE 6]><style type="text/css">.forumline th { height: 24px; padding: 2px 4px; }</style><![endif]-->
+ <!--[if IE]><style type="text/css">.code-copy { display: block; }.post-hr   { margin: 2px auto; }</style><![endif]-->
+
+ 	<div id="ajax-loading"></div><div id="ajax-error"></div>
+<!-- MOD : Thumbnails BBcode With ACP - Start -->
+<script type="text/javascript" src="highslide/highslide.min.js?v=419"></script>
+<link rel="stylesheet" type="text/css" href="highslide/highslide.css" />
+<!--[if lt IE 7]>
+<link rel="stylesheet" type="text/css" href="highslide/highslide-ie6.css" />
+<![endif]-->
+<!-- MOD : Thumbnails BBcode With ACP - End -->
+<script type="text/javascript" src="./misc/js/scrolltopcontrol.js"></script>
+
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+<script type="text/javascript">
+$(function(){
+	$('#cse-search-btn, #cse-search-btn-top').click(function(){
+		var text_match_input_id = $(this).attr('href');
+		var text_match = $('#'+text_match_input_id).val();
+		if (text_match == '') {
+			$('#'+text_match_input_id).addClass('hl-err-input').focus();
+			return false;
+		}
+		$('#cse-text-match').val( text_match );
+		$('#cse-submit-btn').click();
+		return false;
+	});
+
+	$('#quick-search').submit(function(){
+		var action = $('#search-action').val();
+		var txt = $('#search-text').val();
+		if (txt=='Поиск...' || txt == '') {
+			$('#search-text').val('').addClass('hl-err-input').focus();
+			return false;
+		}
+		if (action == 'cse') {
+			$('#cse-search-btn-top').click();
+			return false;
+		}
+		else {
+			$(this).attr('action', action);
+		}
+	});
+});
+</script>
+<script type="text/javascript">
+  window.___gcfg = {lang: 'ru'};
+
+  (function() {
+    var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+    po.src = 'https://apis.google.com/js/plusone.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+  })();
+</script>
+<div id="cse-form-holder" style="display: none;">
+<form action="search_cse.php" id="cse-search-box">
+	<input type="hidden" name="cx" value="000330974855029081329:pxdralc8bfo" />
+	<input type="hidden" name="cof" value="FORID:9" />
+	<input type="hidden" name="ie" value="windows-1251" />
+	<input type="text" name="q" size="60" value="" id="cse-text-match" />
+	<input type="submit" name="sa" value="Поиск в Google" id="cse-submit-btn" />
+</form>
+</div>
+<!--/cse-->
+
+<!--dls--> 
+<script type="text/javascript"> 
+$(function(){ 
+$('a.dl-stub').click(function(){ 
+$('#dl-form').attr('action', this.href); 
+$('#dl-sid').val( getCookie('bb_sid') ); 
+$('#dl-form').submit(); 
+return false; 
+}); 
+}); 
+</script> 
+<div style="display: none;"> 
+<form action="" id="dl-form" method="post"> 
+<input id="dl-sid" type="hidden" name="sid" value="" /> 
+</form> 
+</div> 
+<!--/dls-->
+</head>
+<body>
+
+<table id="ajax-loading" cellpadding="0" cellspacing="0"><tr><td class="icon"></td><td>Загрузка...</td></tr></table>
+<table id="ajax-error" cellpadding="0" cellspacing="0"><tr><td>Ошибка</td></tr></table>
+
+
+<div id="preload" style="position: absolute; overflow: hidden; top: 0; left: 0; height: 1px; width: 1px;"></div>
+
+<div id="body_container">
+
+<!--******************-->
+<!--======-->
+
+<script type="text/javascript">
+if (top != self) {
+	allowed_self = /^(translate\.googleusercontent\.com)$/;
+	if (!self.location.hostname.match(allowed_self)) {
+		$(function(){
+			$('body').html('<center><h1><br /><br />Похоже вас пытаются обмануть<br />Сайт '+ self.location.hostname +' открыт во фрейме</h1></center>');
+		});
+	}
+}
+</script>
+
+<!--page_container-->
+<div id="page_container">
+<a name="top"></a>
+
+<!--page_header-->
+<div id="page_header">
+<!--main_nav-->
+<div id="main-nav">
+<ul id="menu" style="margin:5px 0;">
+	<li><a href="index.php">Навигация</a>
+                    <ul>
+                         <li><a href="tracker.php">Поиск по трекеру</a></li>
+                         <li><a href="search.php">Поиск по форуму</a></li>
+                         <li><a href="search_cse.php">Поиск в google</a></li>
+                         <li><a href="memberlist.php">Пользователи</a></li>
+                    </ul>
+               </li>
+               <li><a href="viewtopic.php?t=3">Правила ресурса</a>
+               </li>
+               </li>
+               <li><a href="index.php">RG Меню</a>
+                    <ul>
+                         <li><a href="order.php">Просьбы о записи трансляций</a>
+                         <li><a href="http://vkontakte.ru/club23729401">Вконтакте</a></li>
+                         <li><a href="bookmarks.php">Закладки</a></li>
+                         <li><a href="weather.php">Погода</a></li>
+                         <li><a href="donate.php">Помощь трекеру</a></li>
+                         <li><a href="rss.php">RSS</a></li>
+                         <li><a href="mytop.php">Лучшие пользователи</a></li>
+                    </ul>
+               </li>
+               <li><a href="viewforum.php?f=42">Расписание релизов</a>
+                    <ul>
+                         <li><a href="viewforum.php?f=109">Футбол</a></li>
+                         <li><a href="viewtopic.php?t=5935">Остальной спорт</a></li>
+                    </ul>
+               </li>
+               <li><a href="groupcp.php">Группы</a>
+                    <ul>
+                         <li><a href="groupcp.php?g=1">Администраторы</a></li>
+                         <li><a href="groupcp.php?g=23">RG Football</a></li>
+                         <li><a href="groupcp.php?g=42">Модераторы</a></li>
+                                        <li><a href="groupcp.php?g=2">VIP</a></li>
+                         <li><a href="groupcp.php?g=3">Top User</a></li>
+                         <li><a href="groupcp.php?g=115">Репортёры</a></li>
+                         <li><a href="groupcp.php?g=100">Хранители</a></li>
+                    </ul>
+               </li>
+               <li><a href="http://rgfootball.tv/" target="_blank">Хостинг картинок</a>
+               </li>
+               <li><a href="portal.php">Портал</a>
+               </li>
+               <li><a href="profile.php?mode=editprofile">Настройки</a>
+               </li>
+</ul>
+<script type="text/javascript">
+    $(function() {
+      if ($.browser.msie && $.browser.version.substr(0,1)<7)
+      {
+        $('li').has('ul').mouseover(function(){
+            $(this).children('ul').css('visibility','visible');
+            }).mouseout(function(){
+            $(this).children('ul').css('visibility','hidden');
+            })
+      }
+    });        
+</script>
+
+</div>
+
+<!--logo-->
+<div id="logo">
+    <a href="./index.php"><img src="./templates/default/images/logo_left.jpg" alt="RGFOOTBALL.NET - Спортивный торрент-трекер. Футбол Онлайн" /></a>
+</div>
+<!--/logo-->
+
+
+<!-- floatrx\search-form -->
+
+<div style="position: absolute; top: 10px; right: 16px;">
+ <div style="background-position: -160px 0px; 
+    width: 10px ! important; position: absolute; left: -45px; top: 0px;" 
+    class="srch_bg">&nbsp;
+  </div>
+
+
+
+ 
+</div>
+
+
+
+<!-- srch -->
+
+<!--	<form onsubmit="$(this).attr('action', $('#search-action').val());
+		var txt=$('#search-text').val(); return !(txt=='поиск...' || !txt);" method="post" action="" id="quick-search">
+		<input type="hidden" value="1" name="max"/>
+		<input type="hidden" value="1" name="to"/>
+		<input type="text" style="padding-left: 15px;  position: absolute; top:0px" class="srch_bg" value="поиск..." onblur="if(this.value=='') this.value='поиск...';" onfocus="if(this.value=='поиск...') this.value='';" name="nm" id="search-text"/>
+		<select class="sel_bg" id="search-action">
+			<option selected="selected" value="tracker.php"> по трекеру </option>
+			<option value="search.php"> по форуму </option>
+					</select>
+		<input type="submit" style="width: 60px;" value="»" class="med bold"/>
+	</form> -->
+
+
+
+
+ <!-- set focus to search-form -->
+ 
+<!-- 
+<script language="JavaScript">
+   document.srch.nm.focus(); 
+</script>
+-->
+
+
+<!--login form-->
+<div class="topmenu ui-corner-all">
+   <table width="100%" cellpadding="0" cellspacing="0">
+   <tr>
+      
+            <td class="tCenter pad_2">
+         <a href="profile.php?mode=register" id="register_link"><b>Регистрация</b></a>
+         &nbsp;&#0183;&nbsp;
+            <form action="./login.php" method="post">
+            Имя: <input type="text" name="login_username" size="12" tabindex="1" accesskey="l" />
+            Пароль: <input type="password" name="login_password" size="12" tabindex="2" />
+            <label title="Автоматически входить при каждом посещении"><input type="checkbox" name="autologin" value="1" tabindex="3" /> Запомнить</label>&nbsp;
+            <input type="submit" name="login" value="Вход" tabindex="4" />
+         </form> 
+         &nbsp;&#0183;&nbsp;
+         <a href="profile.php?mode=sendpassword">Забыли пароль?</a>
+      </td>
+         </tr>
+   </table>
+</div>
+
+<!--/login form-->
+
+
+<br />
+<center>
+<noindex>
+<!-- JavaScript Only -->
+<script type="text/javascript" src="http://adfarm.mediaplex.com/ad/js/15669-147184-43493-0?mpt=[CACHEBUSTER]&mpvc=">
+</script>
+<noscript>
+  <a href="http://adfarm.mediaplex.com/ad/nc/15669-147184-43493-0?mpt=[CACHEBUSTER]">
+    <img src="http://adfarm.mediaplex.com/ad/nb/15669-147184-43493-0?mpt=[CACHEBUSTER]"
+alt="Click Here" border="0">
+</a>
+</noscript>
+</noindex>
+</center>
+<HR SIZE="10">
+
+<!--breadcrumb-->
+<!--<div id="breadcrumb"></div>-->
+<!--/breadcrumb-->
+
+
+</div>
+<!--/page_header-->
+
+<!--menus-->
+
+
+<!--/menus-->
+
+
+
+<!--page_content-->
+<div id="page_content">
+<table cellspacing="0" cellpadding="0" border="0" style="width: 100%;">
+
+ <tr>
+<!--main_content-->
+  <td id="main_content">
+   <div id="main_content_wrap">
+  
+
+<!--=======================-->
+<!--***********************-->
+
+
+
+<!-- page_header.tpl END -->
+<!-- module_xx.tpl START --><script type="text/javascript">
+ajax.openedPosts = {};
+
+ajax.view_post = function(post_id, src) {
+	if (!ajax.openedPosts[post_id]) {
+		ajax.exec({
+			action  : 'view_post',
+			post_id : post_id
+		});
+	}
+	else {
+		var $post = $('#post_'+post_id);
+		if ($post.is(':visible')) {
+			$post.hide();
+		}	else {
+			$post.css({ display: '' });
+		}
+	}
+	$(src).toggleClass('unfolded2');
+};
+
+ajax.callback.view_post = function(data) {
+	var post_id = data.post_id;
+	var $tor = $('#tor_'+post_id);
+	window.location.href='#tor_'+post_id;
+	$('#post-row tr')
+		.clone()
+		.attr({ id: 'post_'+post_id })
+		.find('div.post_body').html(data.post_html).end()
+		.find('a.tLink').attr({ href: $('a.tLink', $tor).attr('href') }).end()
+		.find('a.dLink').attr({ href: $('a.tr-dl', $tor).attr('href') }).end()
+		.insertAfter($tor)
+	;
+	initPostBBCode('#post_'+post_id);
+	var maxH   = screen.height - 290;
+	var maxW   = screen.width - 60;
+	var $post  = $('div.post_wrap', $('#post_'+post_id));
+	var $links = $('div.post_links', $('#post_'+post_id));
+	$post.css({ maxWidth: maxW, maxHeight: maxH });
+	$links.css({ maxWidth: maxW });
+	if ($.browser.msie) {
+		if ($post.height() > maxH) { $post.height(maxH); }
+		if ($post.width() > maxW)  { $post.width(maxW); $links.width(maxW); }
+	}
+	ajax.openedPosts[post_id] = true;
+};
+</script>
+
+<style type="text/css">
+.post_wrap { border: 1px #A5AFB4 solid; margin: 8px 8px 6px; overflow: auto; }
+.post_links { margin: 6px; }
+</style>
+
+<table id="post-row" style="display: none;">
+<tr>
+	<td class="row2" colspan="11">
+		<div class="post_wrap row1">
+			<div class="post_body pad_6"></div><!--/post_body-->
+			<div class="clear"></div>
+		</div><!--/post_wrap-->
+		<div class="post_links med bold tCenter"><a class="tLink">Открыть топик</a> &nbsp;&#0183;&nbsp; <a class="dLink">Скачать .torrent</a></div>
+	</td>
+</tr>
+</table>
+
+<div class="menu-sub" id="pg-jump">
+	<table cellspacing="1" cellpadding="4">
+	<tr><th>К странице...</th></tr>
+	<tr><td>
+		<form onsubmit="return go_to_page();" method="get">
+			<input id="pg-page" type="text" size="5" maxlength="4" />
+			<input type="submit" value="Перейти"/>
+		</form>
+	</td></tr>
+	</table>
+</div>
+<script type="text/javascript">
+function go_to_page ()
+{
+	var page_num = (parseInt( $('#pg-page').val() ) > 1) ? $('#pg-page').val() : 1;
+	var pg_start = (page_num - 1) * 50;
+	window.location = 'tracker.php?search_id=37p1HX0FwwB7&start=' + pg_start;
+	return false;
+}
+</script>
+
+<a name="start"></a>
+<h1 class="pagetitle">Трекер</h1>
+
+<div class="nav">
+	<p class="floatL"><a href="./index.php">Список форумов RGFOOTBALL.NET - Спортивный торрент-трекер. Футбол Онлайн</a></p>
+	<p class="floatR">Результатов поиска: 512 (max: 1500)</p>	<div class="clear"></div>
+</div>
+
+
+
+<style type="text/css">
+#fs-nav .b { font-weight: bold; }
+#fs-nav li, #fs-nav-close { cursor: pointer; }
+#fs-nav span.f:hover, #fs-nav-close:hover { color: blue; background: #DEE2E4; }
+#fs-nav-list { border: 3px double #9AA7AD; background: #EFEFEF; padding: 8px; max-height: 500px; overflow: auto; }
+#fs-sel-cat { min-width: 250px; max-width: 300px; }
+#fs-sel-cat option.cat-title { font-weight: bold; color: #005A88; background: #F5F5F5; }
+</style>
+
+
+<div class="menu-sub" id="fs-nav-list">
+	<div class="tRight"><span id="fs-nav-close" class="med" onclick="$('#fs-nav-list').hide();"> [ спрятать ] </span></div>
+	<ul id="fs-nav" class="tree-root"></ul>
+</div>
+
+<form method="POST" name="post" action="tracker.php#results">
+
+<input type="hidden" name="prev_allw" value="1" />
+<input type="hidden" name="prev_a" value="0" />
+<input type="hidden" name="prev_not_checked" value="0" />
+<input type="hidden" name="prev_closed" value="0" />
+<input type="hidden" name="prev_d" value="0" />
+<input type="hidden" name="prev_not_perfect" value="0" />
+<input type="hidden" name="prev_part_perfect" value="0" />
+<input type="hidden" name="prev_fishily" value="0" />
+<input type="hidden" name="prev_copy" value="0" />
+<input type="hidden" name="prev_dla" value="0" />
+<input type="hidden" name="prev_dlc" value="0" />
+<input type="hidden" name="prev_dld" value="0" />
+<input type="hidden" name="prev_dlw" value="0" />
+<input type="hidden" name="prev_my" value="0" />
+<input type="hidden" name="prev_new" value="0" />
+<input type="hidden" name="prev_sd" value="0" />
+<input type="hidden" name="prev_da" value="1" />
+<input type="hidden" name="prev_dc" value="0" />
+<input type="hidden" name="prev_df" value="1" />
+<input type="hidden" name="prev_ds" value="0" />
+
+<table class="bordered w100" cellspacing="0">
+<col class="row1">
+<tr>
+	<th class="thHead">Опции показа торрентов</th>
+</tr>
+<tr>
+	<td class="row4" style="padding: 4px";>
+
+            <fieldset>
+            <legend>Поиск по статусу раздач</legend>
+            <div class="gen">
+            <p class="chbox"><center><label><input type="checkbox"  name="not_checked"  value="1"  />&nbsp;Не проверено&nbsp;</label><span style="color: purple;"><b>*</b></span>&nbsp; <label><input type="checkbox"  name="closed"  value="1"  />&nbsp;Закрыто&nbsp;</label><span style="color: red;"><b>x</b></span>&nbsp; <label><input type="checkbox"  name="d"  value="1"  />&nbsp;Повтор&nbsp;</label><span style="color: blue;"><b>D</b></span>&nbsp; <label><input type="checkbox"  name="not_perfect"  value="1"  />&nbsp;Неоформлено&nbsp;</label><span style="color: red;"><b>!</b></span>&nbsp; <label><input type="checkbox"  name="part_perfect"  value="1"  />&nbsp;Недооформлено&nbsp;</label><span style="color: red;"><b>?</b></span>&nbsp; <label><input type="checkbox"  name="fishily"  value="1"  />&nbsp;Сомнительно&nbsp;</label><span style="color: green;"><b>#</b></span>&nbsp; <label><input type="checkbox"  name="copy"  value="1"  />&nbsp;Закрыто правообладателем&nbsp;</label><span style="color: red;"><b>&copy;</b></span>&nbsp;</center>&nbsp</p>
+            </div>
+            </fieldset>
+
+		<table class="fieldsets borderless bCenter pad_0" cellspacing="0">
+		<tr>
+			<td height="1" rowspan="2" width="50%">
+				<fieldset>
+				<legend>
+					<select id="fs-sel-cat"><option value="all">&nbsp;Выбрать категорию...&nbsp;</option></select>
+					<span id="fs-nav-menu" style="display: none">&middot;&nbsp;<a class="menu-root" href="#fs-nav-list">перейти к разделу</a></span>
+				</legend>
+				<div>
+					<p class="select">
+<select id="fs" style="width: 100%;" name="f[]" multiple="multiple" size="24">
+<option value="-1" selected="selected" >&nbsp;Все имеющиеся</option>
+<optgroup label="&nbsp;VIP-Архив">
+<option id="fs-237" value="237" class="root_forum has_sf">2011&nbsp;</option>
+<option id="fs-224" value="224">&nbsp;|-&nbsp;VIP Ноябрь 2011&nbsp;</option>
+<option id="fs-225" value="225">&nbsp;|-&nbsp;VIP Декабрь 2011&nbsp;</option>
+<option id="fs-238" value="238" class="root_forum has_sf">2012&nbsp;</option>
+<option id="fs-235" value="235">&nbsp;|-&nbsp;VIP Январь 2012&nbsp;</option>
+<option id="fs-247" value="247">&nbsp;|-&nbsp;VIP Февраль 2012&nbsp;</option>
+<option id="fs-250" value="250">&nbsp;|-&nbsp;VIP Март 2012&nbsp;</option>
+<option id="fs-252" value="252">&nbsp;|-&nbsp;VIP Апрель 2012&nbsp;</option>
+<option id="fs-273" value="273">&nbsp;|-&nbsp;VIP Май 2012&nbsp;</option>
+<option id="fs-275" value="275">&nbsp;|-&nbsp;VIP Июнь 2012&nbsp;</option>
+<option id="fs-375" value="375">&nbsp;|-&nbsp;VIP Июль 2012&nbsp;</option>
+<option id="fs-378" value="378">&nbsp;|-&nbsp;VIP Август 2012&nbsp;</option>
+</optgroup>
+<optgroup label="&nbsp;Футбол">
+<option id="fs-2" value="2" class="root_forum has_sf">Россия/СССР&nbsp;</option>
+<option id="fs-352" value="352">&nbsp;|-&nbsp;Премьер-Лига 2012/13&nbsp;</option>
+<option id="fs-196" value="196">&nbsp;|-&nbsp;Национальная Лига 2012/13&nbsp;</option>
+<option id="fs-57" value="57">&nbsp;|-&nbsp;Премьер-Лига 2011/12&nbsp;</option>
+<option id="fs-56" value="56">&nbsp;|-&nbsp;Национальные кубки&nbsp;</option>
+<option id="fs-46" value="46">&nbsp;|-&nbsp;Матчи прошлых лет&nbsp;</option>
+<option id="fs-3" value="3" class="root_forum has_sf">Англия&nbsp;</option>
+<option id="fs-54" value="54">&nbsp;|-&nbsp;Premier League 2012/13&nbsp;</option>
+<option id="fs-351" value="351">&nbsp;|-&nbsp;Football League 2012/13&nbsp;</option>
+<option id="fs-172" value="172">&nbsp;|-&nbsp;Premier League 2011/12&nbsp;</option>
+<option id="fs-194" value="194">&nbsp;|-&nbsp;Football League 2011/12&nbsp;</option>
+<option id="fs-53" value="53">&nbsp;|-&nbsp;Национальные кубки&nbsp;</option>
+<option id="fs-55" value="55">&nbsp;|-&nbsp;Матчи прошлых лет&nbsp;</option>
+<option id="fs-223" value="223">&nbsp;|-&nbsp;Англия VIP&nbsp;</option>
+<option id="fs-4" value="4" class="root_forum has_sf">Испания&nbsp;</option>
+<option id="fs-58" value="58">&nbsp;|-&nbsp;La Liga 2012/13&nbsp;</option>
+<option id="fs-353" value="353">&nbsp;|-&nbsp;Segunda, Segunda B 2012/13&nbsp;</option>
+<option id="fs-173" value="173">&nbsp;|-&nbsp;La Liga 2011/12&nbsp;</option>
+<option id="fs-202" value="202">&nbsp;|-&nbsp;Segunda, Segunda B 2011/12&nbsp;</option>
+<option id="fs-59" value="59">&nbsp;|-&nbsp;Национальные кубки&nbsp;</option>
+<option id="fs-60" value="60">&nbsp;|-&nbsp;Матчи прошлых лет&nbsp;</option>
+<option id="fs-208" value="208">&nbsp;|-&nbsp;Испания VIP&nbsp;</option>
+<option id="fs-5" value="5" class="root_forum has_sf">Италия&nbsp;</option>
+<option id="fs-209" value="209">&nbsp;|-&nbsp;Италия VIP&nbsp;</option>
+<option id="fs-63" value="63">&nbsp;|-&nbsp;Serie A 2012/13&nbsp;</option>
+<option id="fs-354" value="354">&nbsp;|-&nbsp;Serie B, Lega Pro, Serie D 2012/13&nbsp;</option>
+<option id="fs-174" value="174">&nbsp;|-&nbsp;Serie A 2011/12&nbsp;</option>
+<option id="fs-198" value="198">&nbsp;|-&nbsp;Serie B, Lega Pro, Serie D 2011/12&nbsp;</option>
+<option id="fs-62" value="62">&nbsp;|-&nbsp;Национальные кубки&nbsp;</option>
+<option id="fs-61" value="61">&nbsp;|-&nbsp;Матчи прошлых лет&nbsp;</option>
+<option id="fs-6" value="6" class="root_forum has_sf">Германия&nbsp;</option>
+<option id="fs-210" value="210">&nbsp;|-&nbsp;Германия VIP&nbsp;</option>
+<option id="fs-66" value="66">&nbsp;|-&nbsp;Bundesliga I 2012/13&nbsp;</option>
+<option id="fs-355" value="355">&nbsp;|-&nbsp;Bundesliga II 2012/13&nbsp;</option>
+<option id="fs-175" value="175">&nbsp;|-&nbsp;Bundesliga I 2011/12&nbsp;</option>
+<option id="fs-195" value="195">&nbsp;|-&nbsp;Bundesliga II 2011/12&nbsp;</option>
+<option id="fs-65" value="65">&nbsp;|-&nbsp;Национальные кубки&nbsp;</option>
+<option id="fs-64" value="64">&nbsp;|-&nbsp;Матчи прошлых лет&nbsp;</option>
+<option id="fs-7" value="7" class="root_forum has_sf">Франция&nbsp;</option>
+<option id="fs-211" value="211">&nbsp;|-&nbsp;Франция VIP&nbsp;</option>
+<option id="fs-69" value="69">&nbsp;|-&nbsp;Сезон 2012/13&nbsp;</option>
+<option id="fs-176" value="176">&nbsp;|-&nbsp;Сезон 2011/12&nbsp;</option>
+<option id="fs-68" value="68">&nbsp;|-&nbsp;Национальные кубки&nbsp;</option>
+<option id="fs-67" value="67">&nbsp;|-&nbsp;Матчи прошлых лет&nbsp;</option>
+<option id="fs-8" value="8" class="root_forum has_sf">Украина&nbsp;</option>
+<option id="fs-72" value="72">&nbsp;|-&nbsp;Премьер-Лига 2012/13&nbsp;</option>
+<option id="fs-348" value="348">&nbsp;|-&nbsp;Первая Лига 2012/13&nbsp;</option>
+<option id="fs-152" value="152">&nbsp;|-&nbsp;Премьер-Лига 2011/12&nbsp;</option>
+<option id="fs-71" value="71">&nbsp;|-&nbsp;Национальные кубки&nbsp;</option>
+<option id="fs-70" value="70">&nbsp;|-&nbsp;Матчи прошлых лет&nbsp;</option>
+<option id="fs-212" value="212">&nbsp;|-&nbsp;Украина VIP&nbsp;</option>
+<option id="fs-188" value="188" class="root_forum has_sf">Голландия&nbsp;</option>
+<option id="fs-356" value="356">&nbsp;|-&nbsp;Сезон 2012/13&nbsp;</option>
+<option id="fs-189" value="189">&nbsp;|-&nbsp;Сезон 2011/12&nbsp;</option>
+<option id="fs-190" value="190">&nbsp;|-&nbsp;Национальные кубки&nbsp;</option>
+<option id="fs-191" value="191">&nbsp;|-&nbsp;Матчи прошлых лет&nbsp;</option>
+<option id="fs-213" value="213">&nbsp;|-&nbsp;Голландия VIP&nbsp;</option>
+<option id="fs-9" value="9" class="root_forum has_sf">Другие национальные чемпионаты и кубки...&nbsp;</option>
+<option id="fs-214" value="214">&nbsp;|-&nbsp;Другие чемпионаты VIP&nbsp;</option>
+<option id="fs-87" value="87">&nbsp;|-&nbsp;Европа&nbsp;</option>
+<option id="fs-91" value="91">&nbsp;|-&nbsp;Южная Америка&nbsp;</option>
+<option id="fs-90" value="90">&nbsp;|-&nbsp;Северная Америка&nbsp;</option>
+<option id="fs-88" value="88">&nbsp;|-&nbsp;Азия&nbsp;</option>
+<option id="fs-89" value="89">&nbsp;|-&nbsp;Африка&nbsp;</option>
+<option id="fs-179" value="179">&nbsp;|-&nbsp;Матчи прошлых лет&nbsp;</option>
+<option id="fs-338" value="338" class="root_forum has_sf">Лига Чемпионов 2012-13&nbsp;</option>
+<option id="fs-340" value="340">&nbsp;|-&nbsp;Предварительные раунды&nbsp;</option>
+<option id="fs-342" value="342">&nbsp;|-&nbsp;Групповой турнир&nbsp;</option>
+<option id="fs-344" value="344">&nbsp;|-&nbsp;Плей-офф&nbsp;</option>
+<option id="fs-339" value="339" class="root_forum has_sf">Лига Европы 2012-13&nbsp;</option>
+<option id="fs-381" value="381">&nbsp;|-&nbsp;VIP-Extra UEL 2012-13&nbsp;</option>
+<option id="fs-341" value="341">&nbsp;|-&nbsp;Предварительные раунды&nbsp;</option>
+<option id="fs-343" value="343">&nbsp;|-&nbsp;Групповой турнир&nbsp;</option>
+<option id="fs-345" value="345">&nbsp;|-&nbsp;Плей-офф&nbsp;</option>
+<option id="fs-157" value="157" class="root_forum has_sf">Лига Чемпионов 2011-12&nbsp;</option>
+<option id="fs-158" value="158">&nbsp;|-&nbsp;Предварительные раунды&nbsp;</option>
+<option id="fs-159" value="159">&nbsp;|-&nbsp;Групповой турнир&nbsp;</option>
+<option id="fs-232" value="232">&nbsp;|-&nbsp;Плей-офф&nbsp;</option>
+<option id="fs-220" value="220">&nbsp;|-&nbsp;VIP UCL 2011-12&nbsp;</option>
+<option id="fs-160" value="160" class="root_forum has_sf">Лига Европы 2011-12&nbsp;</option>
+<option id="fs-161" value="161">&nbsp;|-&nbsp;Предварительные раунды&nbsp;</option>
+<option id="fs-162" value="162">&nbsp;|-&nbsp;Групповой турнир&nbsp;</option>
+<option id="fs-231" value="231">&nbsp;|-&nbsp;Плей-офф&nbsp;</option>
+<option id="fs-215" value="215">&nbsp;|-&nbsp;ЛЕ 2011/12 VIP&nbsp;</option>
+<option id="fs-11" value="11" class="root_forum has_sf">Еврокубки&nbsp;</option>
+<option id="fs-376" value="376">&nbsp;|-&nbsp;VIP UEFA&nbsp;</option>
+<option id="fs-377" value="377">&nbsp;|-&nbsp;Суперкубок УЕФА&nbsp;</option>
+<option id="fs-13" value="13">&nbsp;|-&nbsp;Лига Чемпионов 2010-11&nbsp;</option>
+<option id="fs-12" value="12">&nbsp;|-&nbsp;Лига Европы 2010-11&nbsp;</option>
+<option id="fs-74" value="74">&nbsp;|-&nbsp;Лига Чемпионов&nbsp;</option>
+<option id="fs-75" value="75">&nbsp;|-&nbsp;Лига Европы&nbsp;</option>
+<option id="fs-76" value="76">&nbsp;|-&nbsp;Кубок Европейских Чемпионов&nbsp;</option>
+<option id="fs-78" value="78">&nbsp;|-&nbsp;Кубок УЕФА&nbsp;</option>
+<option id="fs-79" value="79">&nbsp;|-&nbsp;Кубок Обладателей Кубков&nbsp;</option>
+<option id="fs-80" value="80">&nbsp;|-&nbsp;Остальные Еврокубки&nbsp;</option>
+<option id="fs-14" value="14" class="root_forum has_sf">Чемпионаты Европы&nbsp;</option>
+<option id="fs-350" value="350">&nbsp;|-&nbsp;EURO 2012&nbsp;</option>
+<option id="fs-118" value="118">&nbsp;|-&nbsp;EURO 2012. Отборочный турнир&nbsp;</option>
+<option id="fs-200" value="200">&nbsp;|-&nbsp;EURO 2013. U-21. Отборочный турнир&nbsp;</option>
+<option id="fs-255" value="255">&nbsp;|-&nbsp;EURO 2012. U-17&nbsp;</option>
+<option id="fs-337" value="337">&nbsp;|-&nbsp;EURO 2012. U-19&nbsp;</option>
+<option id="fs-185" value="185">&nbsp;|-&nbsp;EURO 2011. U-19&nbsp;</option>
+<option id="fs-136" value="136">&nbsp;|-&nbsp;EURO 2011. U-21&nbsp;</option>
+<option id="fs-216" value="216">&nbsp;|-&nbsp;ЧЕ VIP&nbsp;</option>
+<option id="fs-15" value="15" class="root_forum has_sf">Чемпионаты Мира&nbsp;</option>
+<option id="fs-380" value="380">&nbsp;|-&nbsp;VIP-Extra FIFA WC 2014&nbsp;</option>
+<option id="fs-217" value="217">&nbsp;|-&nbsp;VIP FIFA WC 2014&nbsp;</option>
+<option id="fs-168" value="168">&nbsp;|-&nbsp;FIFA WC 2014. Отборочный турнир&nbsp;</option>
+<option id="fs-178" value="178">&nbsp;|-&nbsp;FIFA U-20 WC 2011&nbsp;</option>
+<option id="fs-153" value="153">&nbsp;|-&nbsp;FIFA U-17 WC 2011&nbsp;</option>
+<option id="fs-10" value="10" class="root_forum has_sf">Международные турниры&nbsp;</option>
+<option id="fs-367" value="367">&nbsp;|-&nbsp;2012 Copa Sudamericana&nbsp;</option>
+<option id="fs-239" value="239">&nbsp;|-&nbsp;2012 Africa Cup of Nations&nbsp;</option>
+<option id="fs-241" value="241">&nbsp;|-&nbsp;2012 Copa Libertadores&nbsp;</option>
+<option id="fs-132" value="132">&nbsp;|-&nbsp;2011 Copa Libertadores&nbsp;</option>
+<option id="fs-230" value="230">&nbsp;|-&nbsp;2011 FIFA Club WC&nbsp;</option>
+<option id="fs-155" value="155">&nbsp;|-&nbsp;2011 Copa America&nbsp;</option>
+<option id="fs-133" value="133">&nbsp;|-&nbsp;2011 CONCACAF Gold Cup&nbsp;</option>
+<option id="fs-92" value="92">&nbsp;|-&nbsp;2011 Sudamericano U-20&nbsp;</option>
+<option id="fs-77" value="77">&nbsp;|-&nbsp;2011 AFC Asian Cup&nbsp;</option>
+<option id="fs-218" value="218">&nbsp;|-&nbsp;VIP&nbsp;</option>
+<option id="fs-16" value="16" class="root_forum has_sf">Товарищеские турниры и матчи&nbsp;</option>
+<option id="fs-219" value="219">&nbsp;|-&nbsp;VIP&nbsp;</option>
+<option id="fs-18" value="18" class="root_forum">Мини-футбол&nbsp;</option>
+<option id="fs-19" value="19" class="root_forum">Пляжный футбол&nbsp;</option>
+<option id="fs-17" value="17" class="root_forum">Обзорные и аналитические передачи...&nbsp;</option>
+<option id="fs-37" value="37" class="root_forum has_sf">Футбольное видео, прочее о футболе...&nbsp;</option>
+<option id="fs-199" value="199">&nbsp;|-&nbsp;Видео для мобильных устройств&nbsp;</option>
+<option id="fs-86" value="86">&nbsp;|-&nbsp;Футбольная графика&nbsp;</option>
+<option id="fs-36" value="36" class="root_forum">Аудиопередачи, футбольное аудио...&nbsp;</option>
+<option id="fs-43" value="43" class="root_forum">Футбольная литература&nbsp;</option>
+</optgroup>
+<optgroup label="&nbsp;Спорт">
+<option id="fs-21" value="21" class="root_forum has_sf">Хоккей&nbsp;</option>
+<option id="fs-251" value="251">&nbsp;|-&nbsp;Чемпионат Мира 2012&nbsp;</option>
+<option id="fs-379" value="379">&nbsp;|-&nbsp;КХЛ 2012/13&nbsp;</option>
+<option id="fs-201" value="201">&nbsp;|-&nbsp;КХЛ 2011/12&nbsp;</option>
+<option id="fs-47" value="47">&nbsp;|-&nbsp;КХЛ до 2011 г.&nbsp;</option>
+<option id="fs-207" value="207">&nbsp;|-&nbsp;NHL 2011/12&nbsp;</option>
+<option id="fs-48" value="48">&nbsp;|-&nbsp;NHL 2010/11&nbsp;</option>
+<option id="fs-151" value="151">&nbsp;|-&nbsp;NHL до 2010 г.&nbsp;</option>
+<option id="fs-206" value="206">&nbsp;|-&nbsp;Европейские клубные чемпионаты&nbsp;</option>
+<option id="fs-222" value="222">&nbsp;|-&nbsp;Еврохоккейтур&nbsp;</option>
+<option id="fs-131" value="131">&nbsp;|-&nbsp;Чемпионат Мира 2011&nbsp;</option>
+<option id="fs-234" value="234">&nbsp;|-&nbsp;Чемпионат Мира 2012. U-20&nbsp;</option>
+<option id="fs-49" value="49">&nbsp;|-&nbsp;Международные турниры&nbsp;</option>
+<option id="fs-20" value="20" class="root_forum has_sf">Баскетбол&nbsp;</option>
+<option id="fs-233" value="233">&nbsp;|-&nbsp;NBA 2011/12&nbsp;</option>
+<option id="fs-50" value="50">&nbsp;|-&nbsp;NBA 2010/11&nbsp;</option>
+<option id="fs-150" value="150">&nbsp;|-&nbsp;NBA до 2010 г.&nbsp;</option>
+<option id="fs-204" value="204">&nbsp;|-&nbsp;WNBA 2011&nbsp;</option>
+<option id="fs-197" value="197">&nbsp;|-&nbsp;Чемпионат Европы 2011. Мужчины&nbsp;</option>
+<option id="fs-51" value="51">&nbsp;|-&nbsp;Европейский клубный баскетбол&nbsp;</option>
+<option id="fs-203" value="203">&nbsp;|-&nbsp;Женский баскетбол&nbsp;</option>
+<option id="fs-171" value="171">&nbsp;|-&nbsp;Международные турниры&nbsp;</option>
+<option id="fs-22" value="22" class="root_forum has_sf">Теннис&nbsp;</option>
+<option id="fs-274" value="274">&nbsp;|-&nbsp;VIP Tennis&nbsp;</option>
+<option id="fs-125" value="125">&nbsp;|-&nbsp;ATP World Tour 2011/12&nbsp;</option>
+<option id="fs-126" value="126">&nbsp;|-&nbsp;WTA Tour 2011/12&nbsp;</option>
+<option id="fs-127" value="127">&nbsp;|-&nbsp;ATP WT Masters 1000 2011/12&nbsp;</option>
+<option id="fs-128" value="128">&nbsp;|-&nbsp;Grand Slam Tournaments 2011/12&nbsp;</option>
+<option id="fs-130" value="130">&nbsp;|-&nbsp;Team Season 2011/12&nbsp;</option>
+<option id="fs-129" value="129">&nbsp;|-&nbsp;Матчи прошлых лет&nbsp;</option>
+<option id="fs-23" value="23" class="root_forum has_sf">Авто/мотоспорт&nbsp;</option>
+<option id="fs-248" value="248">&nbsp;|-&nbsp;Формула 1. Сезон 2012&nbsp;</option>
+<option id="fs-117" value="117">&nbsp;|-&nbsp;Формула 1. Сезон 2011&nbsp;</option>
+<option id="fs-44" value="44" class="root_forum has_sf">Биатлон&nbsp;</option>
+<option id="fs-227" value="227">&nbsp;|-&nbsp;Сезон 2011-12&nbsp;</option>
+<option id="fs-226" value="226">&nbsp;|-&nbsp;Сезон 2010-11&nbsp;</option>
+<option id="fs-38" value="38" class="root_forum has_sf">Волейбол&nbsp;</option>
+<option id="fs-261" value="261">&nbsp;|-&nbsp;Мировая лига&nbsp;</option>
+<option id="fs-262" value="262">&nbsp;|-&nbsp;Европейский клубный волейбол&nbsp;</option>
+<option id="fs-170" value="170">&nbsp;|-&nbsp;Международные турниры&nbsp;</option>
+<option id="fs-169" value="169">&nbsp;|-&nbsp;Пляжный волейбол&nbsp;</option>
+<option id="fs-82" value="82" class="root_forum has_sf">Гандбол&nbsp;</option>
+<option id="fs-205" value="205">&nbsp;|-&nbsp;VIP-Гандбол&nbsp;</option>
+<option id="fs-122" value="122" class="root_forum has_sf">Бильярд&nbsp;</option>
+<option id="fs-123" value="123">&nbsp;|-&nbsp;Снукер&nbsp;</option>
+<option id="fs-25" value="25" class="root_forum has_sf">Боевые единоборства&nbsp;</option>
+<option id="fs-98" value="98">&nbsp;|-&nbsp;Бокс&nbsp;</option>
+<option id="fs-101" value="101">&nbsp;|-&nbsp;Рестлинг&nbsp;</option>
+<option id="fs-100" value="100">&nbsp;|-&nbsp;Mixed Martial Arts&nbsp;</option>
+<option id="fs-99" value="99">&nbsp;|-&nbsp;Ultimate Fighting Championship&nbsp;</option>
+<option id="fs-97" value="97">&nbsp;|-&nbsp;Боевые искусства&nbsp;</option>
+<option id="fs-121" value="121" class="root_forum">Бейсбол&nbsp;</option>
+<option id="fs-145" value="145" class="root_forum">Американский футбол&nbsp;</option>
+<option id="fs-106" value="106" class="root_forum has_sf">Покер&nbsp;</option>
+<option id="fs-240" value="240">&nbsp;|-&nbsp;VIP-Poker&nbsp;</option>
+<option id="fs-137" value="137" class="root_forum">Легкая атлетика&nbsp;</option>
+<option id="fs-139" value="139" class="root_forum">Тяжелая атлетика&nbsp;</option>
+<option id="fs-140" value="140" class="root_forum">Велоспорт&nbsp;</option>
+<option id="fs-141" value="141" class="root_forum">Гимнастика&nbsp;</option>
+<option id="fs-24" value="24" class="root_forum has_sf">Зимние виды спорта&nbsp;</option>
+<option id="fs-142" value="142">&nbsp;|-&nbsp;Фигурное катание&nbsp;</option>
+<option id="fs-105" value="105">&nbsp;|-&nbsp;Лыжи&nbsp;</option>
+<option id="fs-104" value="104">&nbsp;|-&nbsp;Горные лыжи&nbsp;</option>
+<option id="fs-149" value="149">&nbsp;|-&nbsp;Фристайл&nbsp;</option>
+<option id="fs-103" value="103">&nbsp;|-&nbsp;Прыжки с трамплина&nbsp;</option>
+<option id="fs-148" value="148">&nbsp;|-&nbsp;Кёрлинг&nbsp;</option>
+<option id="fs-96" value="96">&nbsp;|-&nbsp;XXV Всемирная зимняя Универсиада&nbsp;</option>
+<option id="fs-192" value="192" class="root_forum has_sf">Летние виды спорта&nbsp;</option>
+<option id="fs-193" value="193">&nbsp;|-&nbsp;XXVI Всемирная летняя Универсиада...&nbsp;</option>
+<option id="fs-143" value="143">&nbsp;|-&nbsp;Бадминтон&nbsp;</option>
+<option id="fs-144" value="144">&nbsp;|-&nbsp;Настольный теннис&nbsp;</option>
+<option id="fs-147" value="147">&nbsp;|-&nbsp;Гольф&nbsp;</option>
+<option id="fs-138" value="138" class="root_forum has_sf">Водные виды спорта&nbsp;</option>
+<option id="fs-184" value="184">&nbsp;|-&nbsp;ЧМ Шанхай 2011&nbsp;</option>
+<option id="fs-26" value="26" class="root_forum has_sf">Другие виды спорта&nbsp;</option>
+<option id="fs-146" value="146">&nbsp;|-&nbsp;Регби&nbsp;</option>
+<option id="fs-95" value="95" class="root_forum">Информационно-аналитические передачи и спортивная документ...&nbsp;</option>
+<option id="fs-180" value="180" class="root_forum has_sf">Разное о спорте&nbsp;</option>
+<option id="fs-182" value="182">&nbsp;|-&nbsp;Спортивная литература&nbsp;</option>
+<option id="fs-181" value="181">&nbsp;|-&nbsp;Спортивное видео&nbsp;</option>
+<option id="fs-183" value="183">&nbsp;|-&nbsp;Обучающее видео&nbsp;</option>
+</optgroup>
+<optgroup label="&nbsp;Олимпиада 2012">
+<option id="fs-276" value="276" class="root_forum has_sf">Футбол&nbsp;</option>
+<option id="fs-277" value="277">&nbsp;|-&nbsp;VIP&nbsp;</option>
+<option id="fs-359" value="359">&nbsp;|-&nbsp;Мужчины&nbsp;</option>
+<option id="fs-360" value="360">&nbsp;|-&nbsp;Женщины&nbsp;</option>
+<option id="fs-301" value="301" class="root_forum has_sf">Баскетбол&nbsp;</option>
+<option id="fs-369" value="369">&nbsp;|-&nbsp;VIP-Extra Basketball&nbsp;</option>
+<option id="fs-362" value="362">&nbsp;|-&nbsp;Мужчины&nbsp;</option>
+<option id="fs-361" value="361">&nbsp;|-&nbsp;Женщины&nbsp;</option>
+<option id="fs-303" value="303" class="root_forum has_sf">Бокс&nbsp;</option>
+<option id="fs-304" value="304">&nbsp;|-&nbsp;VIP&nbsp;</option>
+<option id="fs-325" value="325" class="root_forum has_sf">Теннис&nbsp;</option>
+<option id="fs-327" value="327">&nbsp;|-&nbsp;VIP&nbsp;</option>
+<option id="fs-326" value="326">&nbsp;|-&nbsp;Настольный теннис&nbsp;</option>
+<option id="fs-316" value="316" class="root_forum">Лёгкая атлетика&nbsp;</option>
+<option id="fs-318" value="318" class="root_forum">Тяжёлая атлетика&nbsp;</option>
+<option id="fs-278" value="278" class="root_forum has_sf">Водные виды спорта и гребля&nbsp;</option>
+<option id="fs-370" value="370">&nbsp;|-&nbsp;VIP-Extra Waterpolo&nbsp;</option>
+<option id="fs-292" value="292">&nbsp;|-&nbsp;VIP&nbsp;</option>
+<option id="fs-280" value="280">&nbsp;|-&nbsp;Плавание&nbsp;</option>
+<option id="fs-281" value="281">&nbsp;|-&nbsp;Прыжки в воду&nbsp;</option>
+<option id="fs-282" value="282">&nbsp;|-&nbsp;Синхронное плавание&nbsp;</option>
+<option id="fs-279" value="279">&nbsp;|-&nbsp;Водное поло&nbsp;</option>
+<option id="fs-284" value="284">&nbsp;|-&nbsp;Академическая гребля&nbsp;</option>
+<option id="fs-285" value="285">&nbsp;|-&nbsp;Гребля на байдарках и каноэ&nbsp;</option>
+<option id="fs-286" value="286">&nbsp;|-&nbsp;Гребной слалом&nbsp;</option>
+<option id="fs-287" value="287" class="root_forum has_sf">Борьба и единоборства&nbsp;</option>
+<option id="fs-288" value="288">&nbsp;|-&nbsp;Вольная&nbsp;</option>
+<option id="fs-289" value="289">&nbsp;|-&nbsp;Греко-римская&nbsp;</option>
+<option id="fs-291" value="291">&nbsp;|-&nbsp;Тхэквондо&nbsp;</option>
+<option id="fs-290" value="290">&nbsp;|-&nbsp;Дзюдо&nbsp;</option>
+<option id="fs-294" value="294" class="root_forum has_sf">Велоспорт&nbsp;</option>
+<option id="fs-296" value="296">&nbsp;|-&nbsp;Трековые гонки&nbsp;</option>
+<option id="fs-297" value="297">&nbsp;|-&nbsp;Шоссейные гонки&nbsp;</option>
+<option id="fs-298" value="298">&nbsp;|-&nbsp;Маунтинбайк&nbsp;</option>
+<option id="fs-299" value="299">&nbsp;|-&nbsp;BMX&nbsp;</option>
+<option id="fs-305" value="305" class="root_forum has_sf">Волейбол&nbsp;</option>
+<option id="fs-368" value="368">&nbsp;|-&nbsp;VIP-Extra Volleyball&nbsp;</option>
+<option id="fs-364" value="364">&nbsp;|-&nbsp;Мужчины&nbsp;</option>
+<option id="fs-363" value="363">&nbsp;|-&nbsp;Женщины&nbsp;</option>
+<option id="fs-306" value="306">&nbsp;|-&nbsp;Пляжный волейбол&nbsp;</option>
+<option id="fs-308" value="308" class="root_forum has_sf">Гандбол&nbsp;</option>
+<option id="fs-245" value="245">&nbsp;|-&nbsp;VIP-Extra Handball&nbsp;</option>
+<option id="fs-366" value="366">&nbsp;|-&nbsp;Мужчины&nbsp;</option>
+<option id="fs-365" value="365">&nbsp;|-&nbsp;Женщины&nbsp;</option>
+<option id="fs-310" value="310" class="root_forum has_sf">Гимнастика&nbsp;</option>
+<option id="fs-312" value="312">&nbsp;|-&nbsp;Художественная гимнастика&nbsp;</option>
+<option id="fs-311" value="311">&nbsp;|-&nbsp;Спортивная гимнастика&nbsp;</option>
+<option id="fs-313" value="313">&nbsp;|-&nbsp;Прыжки на батуте&nbsp;</option>
+<option id="fs-322" value="322" class="root_forum has_sf">Стрельба&nbsp;</option>
+<option id="fs-324" value="324">&nbsp;|-&nbsp;VIP&nbsp;</option>
+<option id="fs-323" value="323">&nbsp;|-&nbsp;Стрельба из лука&nbsp;</option>
+<option id="fs-328" value="328" class="root_forum has_sf">Конный спорт&nbsp;</option>
+<option id="fs-331" value="331">&nbsp;|-&nbsp;Троеборье&nbsp;</option>
+<option id="fs-330" value="330">&nbsp;|-&nbsp;Конкур&nbsp;</option>
+<option id="fs-329" value="329">&nbsp;|-&nbsp;Выездка&nbsp;</option>
+<option id="fs-333" value="333" class="root_forum has_sf">Другие виды спорта&nbsp;</option>
+<option id="fs-371" value="371">&nbsp;|-&nbsp;VIP-Extra Hockey&nbsp;</option>
+<option id="fs-358" value="358">&nbsp;|-&nbsp;Бадминтон&nbsp;</option>
+<option id="fs-319" value="319">&nbsp;|-&nbsp;Современное пятиборье&nbsp;</option>
+<option id="fs-320" value="320">&nbsp;|-&nbsp;Триатлон&nbsp;</option>
+<option id="fs-283" value="283">&nbsp;|-&nbsp;Парусный спорт&nbsp;</option>
+<option id="fs-336" value="336">&nbsp;|-&nbsp;Фехтование&nbsp;</option>
+<option id="fs-335" value="335">&nbsp;|-&nbsp;Хоккей на траве&nbsp;</option>
+<option id="fs-349" value="349" class="root_forum">Обзорные передачи&nbsp;</option>
+</optgroup>
+<optgroup label="&nbsp;Игры">
+<option id="fs-166" value="166" class="root_forum has_sf">Игры для PC (раздачи)&nbsp;</option>
+<option id="fs-167" value="167">&nbsp;|-&nbsp;Прочее для игр&nbsp;</option>
+</optgroup>
+<optgroup label="&nbsp;Разное">
+<option id="fs-29" value="29" class="root_forum">Архив&nbsp;</option>
+<option id="fs-229" value="229" class="root_forum">Тестовый форум&nbsp;</option>
+</optgroup>
+</select>
+</p>
+					<p><img width="500" class="spacer" src="./images/spacer.gif" alt="" /></p>
+				</div>
+				</fieldset>
+			</td>
+			<td height="1" width="20%">
+				<fieldset>
+				<legend>Упорядочить по</legend>
+				<div class="med">
+					<p class="select">
+<select  name="o" id="o">
+		<option selected="selected"  value="1">&nbsp;Зарегистрирован&nbsp;</option>
+		<option value="4">&nbsp;Количество скачиваний&nbsp;</option>
+		<option value="10">&nbsp;Количество сидов&nbsp;</option>
+		<option value="11">&nbsp;Количество личей&nbsp;</option>
+		<option value="7">&nbsp;Размер&nbsp;</option>
+		<option value="8">&nbsp;Посл. сообщение&nbsp;</option>
+</select>
+</p>
+					<p class="radio"><label><input type="radio" name="s" value="1"  /> по возрастанию</label></p>
+					<p class="radio"><label><input type="radio" name="s" value="2"  checked="checked"  /> по убыванию</label></p>
+				</div>
+				</fieldset>
+				<fieldset>
+				<legend>Торенты за</legend>
+				<div>
+					<p class="select">
+<select  name="tm" id="tm">
+		<option selected="selected"  value="-1">&nbsp;за все время&nbsp;</option>
+		<option value="1">&nbsp;за сегодня&nbsp;</option>
+		<option value="3">&nbsp;последние 3 дня&nbsp;</option>
+		<option value="7">&nbsp;посл. неделю&nbsp;</option>
+		<option value="14">&nbsp;посл. 2 недели&nbsp;</option>
+		<option value="30">&nbsp;последний месяц&nbsp;</option>
+</select>
+</p>
+				</div>
+				</fieldset>
+			<td width="30%">
+				<fieldset>
+				<legend>Показывать только</legend>
+				<div class="gen">
+					<p class="chbox"><label><input type="checkbox"  name="my"  value="1"  disabled="disabled"  />&nbsp;Мои раздачи&nbsp;</label>[<b>&reg;</b>]</p>
+					<p class="chbox"><label><input type="checkbox"  name="a"  value="1"  />&nbsp;Активные (есть seeder или leecher)&nbsp;</label></p>
+					<p class="chbox"><label><input type="checkbox"  name="sd"  value="1"  />&nbsp;Есть seeder (полный источник)&nbsp;</label></p>
+					<p class="chbox"><label><input type="checkbox"  name="new"  value="1"  disabled="disabled"  />&nbsp;Новые с последнего посещения&nbsp;</label>[<img src="./templates/default/images/icon_minipost_new.gif" class="icon1" alt="new" />]&nbsp;</p>
+					<p class="chbox"><label>
+							<input type="checkbox"  			onclick="user.set('h_tsp', this.checked ? 1 : 0);"
+							/>&nbsp;Скрыть содержимое {...}
+						</label></p>
+
+				</div>
+				</fieldset>
+		<tr>
+			<td colspan="2" width="50%">
+				<fieldset>
+				<legend>Автор</legend>
+				<div>
+					<p class="input"><input style="width: 40%"  class="post" type="text" size="16" maxlength="25" name="pn" value="" /> <input style="width: 40%;" type="button" value="Найти пользователя" onclick="window.open('search.php?mode=searchuser&input_name=pn', '_phpbbsearch', 'HEIGHT=250,resizable=yes,WIDTH=400'); return false;" /></p>
+				</div>
+				</fieldset>
+				<fieldset>
+				<legend>Название содержит</legend>
+				<div>
+					<p class="input">
+						<input style="width: 95%;" class="post" type="text" size="50" maxlength="60" name="nm" value="Милан" />
+					</p>
+						<a href="search.php" class="med s-all">Поиск по форуму</a>
+					</p>
+				</div>
+				</fieldset>
+				<fieldset style="margin-top: 4px; padding-bottom: 4px;"> 
+					<legend>Ссылки</legend> 
+					<div> 
+						<p style="padding-top: 3px;" class="chbox med"> 
+							<a onclick="return get_fs_link();" href="#" class="med">Ссылка на выбранные разделы</a> &nbsp;
+						</p> 
+					</div> 
+				</fieldset> 
+<center><a target="_blank" href="adv.php" class="med"><img src="http://rgfootball.net/templates/default/images/3GB.png"></a></center>
+			</td>
+		</tr>
+		</table>
+
+	</td>
+</tr>
+<tr>
+	<td class="row3 pad_4 tCenter">
+                <input class="bold" type="submit" name="submit" value="Поиск" style="width: 140px; cursor:pointer"" />
+	</td>
+</tr>
+</table>
+
+</form>
+
+<div class="spacer_6"></div>
+
+
+
+<a name="results"></a>
+<style type="text/css">
+.seed-leech { padding-left: 1px; padding-right: 0; }
+.tr_tm { margin-top: 2px; font-size: 10px; color: #676767; }
+.ch { font-style: italic; color: #0080FF; }
+#fs-sel-cat option.cat-title { font-weight: bold; color: #005A88; background: #F5F5F5; }
+</style>
+
+<table class="forumline tablesorter" id="tor-tbl">
+<thead>
+<tr>
+	<th class="{sorter: false}">&nbsp;</th>
+	<th class="{sorter: 'text'}">&nbsp;</th>
+			<th class="{sorter: 'text'}" width="25%" title="Форум"><b class="tbs-text">Форум</b></th>
+		<th class="{sorter: 'text'}" width="75%" title="Тема"><b class="tbs-text">Тема</b></th>
+		<th class="{sorter: 'text'}" title="Автор"><b class="tbs-text">Автор</b></th>
+		<th class="{sorter: 'digit'}" title="Размер"><b class="tbs-text">Размер</b></th>
+	<th class="{sorter: 'digit'}" title="<b>Сидов</b>"><b class="tbs-text">S</b></th>
+	<th class="{sorter: 'digit'}" title="<b>Личеров</b>"><b class="tbs-text">L</b></th>
+	<th class="{sorter: 'digit'}" title=".torrent скачан / Ответов"><b class="tbs-text">C</b></th>
+		
+	<th class="{sorter: 'digit'}" title="Добавлен"><b class="tbs-text">Добавлен</b></th>
+</tr>
+</thead>
+<tr class="tCenter" id="tor_194308">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=55346"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Чемпионат Италии 2012-13 / 5-й тур / Милан - Кальяри / Футбол HD [26.09.2012, 1080i, H.264, RU, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(194308, this); return false;" href="./viewtopic.php?t=55346">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=78">-=ShakhtyoR=-</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>9325073728</u>
+		<a class="small tr-dl" href="./download.php?id=55140">8,68&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>9</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>4</b></td>
+	<td class="row4 small" title="Ответов: 0">15</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1348821189</u>
+		<p>Сегодня 12:33</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_194111">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=55262"><b>Чемпионат Италии 2012-13 / 5-й тур / Милан - Кальяри / НТВ+ [27.09.2012, SD, H.264, RU, IPTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(194111, this); return false;" href="./viewtopic.php?t=55262">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=18854">wunder_88</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1215289981</u>
+		<a class="small tr-dl" href="./download.php?id=55057">1,13&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>37</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>2</b></td>
+	<td class="row4 small" title="Ответов: 2">154</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1348692259</u>
+		<p>Вчера 00:44</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_193889">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=55171"><b>Чемпионат Италии 2012-13 | 4 тур | Интер (Милан) — Сиена (Сиена) | Sky Calcio HD [23.09.2012, 720р, H.264, ITA + INT, HDTVRip]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(193889, this); return false;" href="./viewtopic.php?t=55171">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=671">Gorlum</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>3202582614</u>
+		<a class="small tr-dl" href="./download.php?id=54963">2,98&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>3</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>3</b></td>
+	<td class="row4 small" title="Ответов: 0">23</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1348591260</u>
+		<p>25-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_193663">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=55068"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Чемпионат Италии 2012-13 / 4-й тур / Удинезе - Милан / НТВ+ [2012., Футбол, HDTVRip, 1080p, RU]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(193663, this); return false;" href="./viewtopic.php?t=55068">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=19701">Пикник</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>11623077064</u>
+		<a class="small tr-dl" href="./download.php?id=54860">10,82&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>10</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>1</b></td>
+	<td class="row4 small" title="Ответов: 0">51</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1348485698</u>
+		<p>24-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_193440">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1"><b><span title="Не проверено" style="color: purple;">*</span></b>													
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=54985"><img src="images/tor_silver.gif" width="16" height="15" title="Серебро" />&nbsp;<b>Чемпионат Италии 2012-13 / 4-й тур / Удинезе - Милан / НТВ+ [23.09.2012, SD, MPEG, RU, IPTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(193440, this); return false;" href="./viewtopic.php?t=54985">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=18854">wunder_88</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>3152596992</u>
+		<a class="small tr-dl" href="./download.php?id=54767">2,94&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>24</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 2">199</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1348414072</u>
+		<p>23-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_193259">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=342">Групповой турнир</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=54899"><b>Лига Чемпионов 2012-13 | Все матчи АС МИЛАН в 720p / 50 fps | Группа С | НТВ+ HD [2012/13, H.264, 50 fps, RU, HDTVRip]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(193259, this); return false;" href="./viewtopic.php?t=54899">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=671">Gorlum</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>2695338096</u>
+		<a class="small tr-dl" href="./download.php?id=54673">2,51&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>4</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 1">8</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1348339912</u>
+		<p>22-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_192446">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=342">Групповой турнир</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=54636"><b>Лига Чемпионов 2012-13 / 1-й тур / Группа C / Милан (Италия) - Андерлехт (Бельгия) / НТВ+ [18.09.2012, SD, XviD, RU, DVB]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(192446, this); return false;" href="./viewtopic.php?t=54636">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=5659">sabaka11</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1656223392</u>
+		<a class="small tr-dl" href="./download.php?id=54394">1,54&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>15</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 1">159</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1348038818</u>
+		<p>19-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_192441">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=342">Групповой турнир</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=54634"><img src="images/tor_silver.gif" width="16" height="15" title="Серебро" />&nbsp;<b>Лига Чемпионов 2012-13 / 1-й тур / Группа C / Милан (Италия) - Андерлехт (Бельгия) / Smart Spor HD [18.09.2012, HD, 720p, INT, DVB]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(192441, this); return false;" href="./viewtopic.php?t=54634">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=5659">sabaka11</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>2567145657</u>
+		<a class="small tr-dl" href="./download.php?id=54389">2,39&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>1</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 0">25</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1348033535</u>
+		<p>19-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_192417">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=342">Групповой турнир</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=54631"><img src="images/tor_silver.gif" width="16" height="15" title="Серебро" />&nbsp;<b>Лига Чемпионов 2012-13 / 1-й тур / Группа C / Милан (Италия) - Андерлехт (Бельгия) / HD Спорт [18.09.2012, HD, 720p, H.264, RU]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(192417, this); return false;" href="./viewtopic.php?t=54631">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=62">olegzzka</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>3182904769</u>
+		<a class="small tr-dl" href="./download.php?id=54384">2,96&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>21</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 2">243</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1348021752</u>
+		<p>19-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_192387">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=342">Групповой турнир</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=54622"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Лига Чемпионов 2012-13 / 1-й тур / Группа C / Милан (Италия)- Андерлехт (Бельгия) / HD Sport [18.09.2012, 1080i, H.264, RU, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(192387, this); return false;" href="./viewtopic.php?t=54622">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=78">-=ShakhtyoR=-</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>9562595184</u>
+		<a class="small tr-dl" href="./download.php?id=54371">8,91&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>16</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 3">143</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1348010789</u>
+		<p>19-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_187837">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1"><b><span title="Не проверено" style="color: purple;">*</span></b>													
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=52952"><b>Все матчи Милана в HD 720p в Серии А сезона 2012-13 | НТВ+ HD [2012/2013, HD, 50 fps, 720р, RU, HDTVRip]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(187837, this); return false;" href="./viewtopic.php?t=52952">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=671">Gorlum</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>8691551303</u>
+		<a class="small tr-dl" href="./download.php?id=54229">8,09&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>3</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 6">19</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1347892420</u>
+		<p>17-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_191542">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=54317"><b>Чемпионат Италии 2012-13 / 3-й тур / Милан — Аталанта / НТВ+ [15.09.2012, 400p, H.264, RU, HDTVRip]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(191542, this); return false;" href="./viewtopic.php?t=54317">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=18854">wunder_88</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1310675701</u>
+		<a class="small tr-dl" href="./download.php?id=54077">1,22&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>6</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>2</b></td>
+	<td class="row4 small" title="Ответов: 4">148</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1347780932</u>
+		<p>16-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_191550">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1"><b><span title="Не проверено" style="color: purple;">*</span></b>													
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=229">Тестовый форум</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=54321"><b>Чемпионат Италии 2012-13 / 3-й тур / Милан — Аталанта / НТВ+ JCS Sport HD [15.09.2012 г., 1080i, H.264, En+Ar, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(191550, this); return false;" href="./viewtopic.php?t=54321">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=64384">barwar88</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>7675068416</u>
+		<a class="small tr-dl" href="./download.php?id=54046">7,15&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title=" Last seen: 
+ Never"><b>0</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 2">24</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1347749550</u>
+		<p>16-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_191417">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=54271"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Чемпионат Италии 2012-13 / 3-й тур / Милан — Аталанта / НТВ+ [15.09.2012 г., 1080i, H.264, RU, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(191417, this); return false;" href="./viewtopic.php?t=54271">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=12">Max</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>11766680112</u>
+		<a class="small tr-dl" href="./download.php?id=54032">10,96&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>9</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 3">126</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1347742368</u>
+		<p>16-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_188997">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=209">Италия VIP</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=53364"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Чемпионат Италии 2012-2013 / 2-й тур / Болонья - Милан / Sky Italia HD  [01.09.2012, HD , 1080i, H.264, IT, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(188997, this); return false;" href="./viewtopic.php?t=53364">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=3506">Геннадий</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>15431327640</u>
+		<a class="small tr-dl" href="./download.php?id=53123">14,37&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title=" Last seen: 
+ Сегодня 02:25"><b>0</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 0">4</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1346586167</u>
+		<p>2-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_189231">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=53434"><b>Чемпионат Италии 2012-13 / 2-й тур / Болонья - Милан / beIN HD [01.09.2012, HD, H.264, 720p, 50 fps, EN, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(189231, this); return false;" href="./viewtopic.php?t=53434">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=12218">Compiler</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>3875307896</u>
+		<a class="small tr-dl" href="./download.php?id=53098">3,61&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title=" Last seen: 
+ Never"><b>0</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 0">62</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1346575245</u>
+		<p>2-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_188995">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=53363"><b>Чемпионат Италии 2012-13 / 2-й тур / Болонья - Милан / НТВ+ [Футбол, 01.09.2012, SD, XviD, RU, IPTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(188995, this); return false;" href="./viewtopic.php?t=53363">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=5659">sabaka11</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1466617252</u>
+		<a class="small tr-dl" href="./download.php?id=53045">1,37&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>8</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>1</b></td>
+	<td class="row4 small" title="Ответов: 0">317</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1346534896</u>
+		<p>2-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_189002">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=53369"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Чемпионат Италии 2012-13 / 2-й тур / Болонья - Милан / Футбол 2 HD [01.09.2012, 1080i, H.264, RU, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(189002, this); return false;" href="./viewtopic.php?t=53369">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=78">-=ShakhtyoR=-</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>11511526136</u>
+		<a class="small tr-dl" href="./download.php?id=53044">10,72&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>8</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>2</b></td>
+	<td class="row4 small" title="Ответов: 1">146</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1346533439</u>
+		<p>2-Сен-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_187785">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=52935"><b>Товарищеский<wbr> матч / 2008 / Милан - Челси / ESPN  [04.08.2008,S<wbr>D,XviD,EN,SA<wbr>T]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(187785, this); return false;" href="./viewtopic.php?t=52935">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=1084">capuchino</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>891358440</u>
+		<a class="small tr-dl" href="./download.php?id=52579">850&nbsp;MB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>2</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 4">12</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1346065206</u>
+		<p>27-Авг-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_187555">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=378">VIP Август 2012</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=52859"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Чемпионат Италии 2012-2013 / 1-й тур / Милан - Сампдория / Sky Italia HD  [26.08.2012, HD , 1080i, H.264, IT, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(187555, this); return false;" href="./viewtopic.php?t=52859">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=3506">Геннадий</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>14697146280</u>
+		<a class="small tr-dl" href="./download.php?id=52521">13,69&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title=" Last seen: 
+ 5-Сен-12"><b>0</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 1">5</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1346010873</u>
+		<p>26-Авг-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_187547">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=52855"><b>Чемпионат Италии 2012-13 / 1-й тур / Милан - Сампдория / НТВ+ [26.08.2012, SD, XviD, RU, SAT]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(187547, this); return false;" href="./viewtopic.php?t=52855">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=10">Aleks Del Piero</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1552391592</u>
+		<a class="small tr-dl" href="./download.php?id=52515">1,45&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>9</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>1</b></td>
+	<td class="row4 small" title="Ответов: 5">245</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1346008251</u>
+		<p>26-Авг-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_187563">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=63">Serie A 2012/13</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=52864"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Чемпионат Италии 2012-13 / 1-й тур / Милан - Сампдория / HD Спорт [26.08.2012, 1080i, H.264, RU, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(187563, this); return false;" href="./viewtopic.php?t=52864">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=78">-=ShakhtyoR=-</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>11125584884</u>
+		<a class="small tr-dl" href="./download.php?id=52510">10,36&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>5</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 7">125</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1346005724</u>
+		<p>26-Авг-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_186169">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=52349"><img src="images/tor_silver.gif" width="16" height="15" title="Серебро" />&nbsp;<b>Кубок Берлускони 2012 / Милан - Ювентус / Спорт 1 [19.08.2012, SD, XviD, RU, SAT]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(186169, this); return false;" href="./viewtopic.php?t=52349">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=10">Aleks Del Piero</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1642083756</u>
+		<a class="small tr-dl" href="./download.php?id=51974">1,53&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>6</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 5">209</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1345413970</u>
+		<p>20-Авг-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_186098">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=378">VIP Август 2012</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=52317"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Кубок Берлускони 2012 / Милан - Ювентус + Перед матчем + После матча / Al Jazeera Sport / [19.08.12 , SD , H.264, EN, SAT]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(186098, this); return false;" href="./viewtopic.php?t=52317">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=3506">Геннадий</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>3745574572</u>
+		<a class="small tr-dl" href="./download.php?id=51966">3,49&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title=" Last seen: 
+ Сегодня 00:10"><b>0</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 1">4</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1345411603</u>
+		<p>20-Авг-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_186048">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">													
+			<b><span title="Недооформлено" style="color: red;">?</span></b>							</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=52301"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Кубок Берлускони 2012 / Милан - Ювентус / Спорт1 [19.08.2012, HD, 1080i, RU, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(186048, this); return false;" href="./viewtopic.php?t=52301">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=5733">Thеtorreroiz<wbr>e007</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>11980162760</u>
+		<a class="small tr-dl" href="./download.php?id=51961">11,16&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>5</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 3">109</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1345410270</u>
+		<p>20-Авг-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_184417">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=51585"><b>Товарищеский<wbr> матч / 2012 / Реал - Милан / Al Jazeera Sport HD1 [09.08.2012,S<wbr>D,XviD,EN,SA<wbr>T]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(184417, this); return false;" href="./viewtopic.php?t=51585">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=1084">capuchino</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1414337618</u>
+		<a class="small tr-dl" href="./download.php?id=51147">1,32&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>2</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 0">34</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1344622160</u>
+		<p>10-Авг-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_184230">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=51509"><b>Товарищеский<wbr> матч 2012 / Реал Мадрид (Испания) - Милан (Италия) / ESPN [Футбол, 09.08.2012, SD, H264, EN, SAT]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(184230, this); return false;" href="./viewtopic.php?t=51509">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=5659">sabaka11</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>935858833</u>
+		<a class="small tr-dl" href="./download.php?id=51064">893&nbsp;MB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>1</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 0">88</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1344529746</u>
+		<p>9-Авг-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_184106">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=51465"><b>Товарищеский<wbr> матч 2012 / Реал Мадрид (Испания) - Милан (Италия) / Al Jazeera Sport HD+1 [Футбол, 09.08.2012, HD, 720p, EN, SAT]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(184106, this); return false;" href="./viewtopic.php?t=51465">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=5659">sabaka11</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1335041072</u>
+		<a class="small tr-dl" href="./download.php?id=51023">1,24&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>14</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 10">551</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1344495763</u>
+		<p>9-Авг-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_183247">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=51068"><b>Товарищеский<wbr> матч 2012 / Милан (Италия) - Олимпия (Гондурас) / ESPN [Футбол, 04.08.2012, SD, EN, SAT]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(183247, this); return false;" href="./viewtopic.php?t=51068">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=5659">sabaka11</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>762461786</u>
+		<a class="small tr-dl" href="./download.php?id=50619">727&nbsp;MB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>2</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 1">83</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1344159879</u>
+		<p>5-Авг-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_182616">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=50769"><b>Товарищеский<wbr> матч  / 2012  / Челси - Милан / ESPN HD [29.07.2012,S<wbr>D,XviD,EN,SA<wbr>T]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(182616, this); return false;" href="./viewtopic.php?t=50769">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=1084">capuchino</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1431415158</u>
+		<a class="small tr-dl" href="./download.php?id=50302">1,33&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>2</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 1">74</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1343846350</u>
+		<p>1-Авг-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_181923">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=50480"><b>Товарищеский<wbr> Матч 2012 / Челси (Англия) — Милан (Италия) / ESPN HD [28.07.2012, HD, H.264, 720p, 59.94 fps, EN, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(181923, this); return false;" href="./viewtopic.php?t=50480">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=12218">Compiler</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>3812258736</u>
+		<a class="small tr-dl" href="./download.php?id=49995">3,55&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>1</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 5">183</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1343570793</u>
+		<p>29-Июл-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_181188">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=50219"><b>Товарищеский<wbr> Матч 2012 / Шальке - Милан / Футбол [24.07.2012, SD, XviD, UA, SAT]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(181188, this); return false;" href="./viewtopic.php?t=50219">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=39">R1C@RDO&gt;&gt;22</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1439086146</u>
+		<a class="small tr-dl" href="./download.php?id=49739">1,34&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>1</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 0">40</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1343158513</u>
+		<p>24-Июл-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_181187">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=50218"><b>Товарищеский<wbr> матч 2012 / Шальке-04 (Германия) - Милан (Италия) / Россия 2 [24.07.2012, SD, XviD, RU, IPTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(181187, this); return false;" href="./viewtopic.php?t=50218">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=18854">wunder_88</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1393707692</u>
+		<a class="small tr-dl" href="./download.php?id=49738">1,3&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>1</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 1">127</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1343157586</u>
+		<p>24-Июл-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_180928">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=50135"><b>Товарищеский<wbr> матч 2012 | Trofeo Tim 2012 | Милан, Ювентус, Интер | Спорт 1 HD [21.07.2012, 720p, H.264, RU, HDTVRip]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(180928, this); return false;" href="./viewtopic.php?t=50135">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=671">Gorlum</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>4063976894</u>
+		<a class="small tr-dl" href="./download.php?id=49649">3,78&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>2</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>2</b></td>
+	<td class="row4 small" title="Ответов: 2">109</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1342975935</u>
+		<p>22-Июл-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_180788">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=50078"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Товарищеские<wbr> матчи / Ювентуса, Интера, Милана / Спорт 1 HD [21.07.2012, HD, 1080i, RU, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(180788, this); return false;" href="./viewtopic.php?t=50078">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=78">-=ShakhtyoR=-</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>19413102404</u>
+		<a class="small tr-dl" href="./download.php?id=49613">18,08&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>2</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 15">123</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1342936743</u>
+		<p>22-Июл-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_180680">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=16">Товарищеские турниры и матчи</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=50031"><b>TIM Trophy 2012 / Интер - Ювентус, Ювентус - Милан, Интер - Милан / Спорт 1 [Футбол, 21.07.2012, SD, XviD, RU, IPTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(180680, this); return false;" href="./viewtopic.php?t=50031">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=5659">sabaka11</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>2193021950</u>
+		<a class="small tr-dl" href="./download.php?id=49607">2,04&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>5</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>1</b></td>
+	<td class="row4 small" title="Ответов: 10">295</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1342910878</u>
+		<p>22-Июл-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_169746">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=51">Европейский клубный баскетбол</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=47535"><b>Чемпионат Италии 2011-12 / 1/2 финала / Милано - Скаволини Пезаро / EA7 Emporio Armani Milano - Scavolini Siviglia Pesaro / Rai [29-04.05-06.<wbr>2012, SD, H264, IT, SAT]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(169746, this); return false;" href="./viewtopic.php?t=47535">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=94">_Marik_</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>3749829843</u>
+		<a class="small tr-dl" href="./download.php?id=47436">3,49&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title=" Last seen: 
+ 31-Июл-12"><b>0</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 7">23</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1339140354</u>
+		<p>8-Июн-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_169274">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=61">Матчи прошлых лет</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=47390"><b>Чемпионат Италии 1999-00 / 27-й тур  / Милан - Ювентус / Золотая коллекция / ESPN [25.12.2012,S<wbr>D,DivX,ITA,V<wbr>HS]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(169274, this); return false;" href="./viewtopic.php?t=47390">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=1084">capuchino</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>770799624</u>
+		<a class="small tr-dl" href="./download.php?id=46647">735&nbsp;MB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>1</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 0">25</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1337972225</u>
+		<p>25-Май-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_169117">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=61">Матчи прошлых лет</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=47334"><b>Чемпионат Италии 1991-92 / 12-й тур  / Интер - Милан / Золотая коллекция / Classic SPORT [02.04.2008,S<wbr>D,XviD,FR,VH<wbr>S]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(169117, this); return false;" href="./viewtopic.php?t=47334">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=1084">capuchino</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1173157864</u>
+		<a class="small tr-dl" href="./download.php?id=46602">1,09&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>1</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 0">22</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1337887741</u>
+		<p>24-Май-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_168534">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=51">Европейский клубный баскетбол</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=47133"><b>Чемпионат Италии 2011-12 / 1/4 финала / Второй матч / Милано - Венеция / EA7 Emporio Armani Milano - Umana Venezia / Rai [20.05.2012, SD, H264, IT, SAT]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(168534, this); return false;" href="./viewtopic.php?t=47133">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=94">_Marik_</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>988338666</u>
+		<a class="small tr-dl" href="./download.php?id=46423">943&nbsp;MB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>1</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 2">24</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1337606085</u>
+		<p>21-Май-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_168428">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=61">Матчи прошлых лет</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=47094"><b>Чемпионат Италии 1998-99 / 32-й тур  / Ювентус - Милан / Золотая коллекция / RAI [22.10.2010,S<wbr>D,DivX,ITA,V<wbr>HS]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(168428, this); return false;" href="./viewtopic.php?t=47094">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=1084">capuchino</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1416290096</u>
+		<a class="small tr-dl" href="./download.php?id=46381">1,32&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>4</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 1">26</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1337540000</u>
+		<p>20-Май-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_168170">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=61">Матчи прошлых лет</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=47025"><b>Чемпионат Италии 1996-97 / 26-й тур  / Милан - Ювентус / Золотая коллекция / TELEPIU  [13.12.2008,S<wbr>D,XviD,ITA,T<wbr>V]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(168170, this); return false;" href="./viewtopic.php?t=47025">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=1084">capuchino</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1339603438</u>
+		<a class="small tr-dl" href="./download.php?id=46303">1,25&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>3</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 3">29</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1337452150</u>
+		<p>19-Май-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_9370">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1"><b><span title="Не проверено" style="color: purple;">*</span></b>													
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=13">Лига Чемпионов 2010-11</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=1366"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Лига Чемпионов 2010-11 / Все матчи Милана в HD 720p [2010, HD, 720p, ITA/RU, HDTVRip]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(9370, this); return false;" href="./viewtopic.php?t=1366">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=671">Gorlum</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>21573115948</u>
+		<a class="small tr-dl" href="./download.php?id=46291">20,09&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>2</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 5">12</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1337443364</u>
+		<p>19-Май-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_99071">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=174">Serie A 2011/12</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=21038"><b>Все матчи Милана в HD 720p в Серии А сезона 2011-12 | Sky Сalcio HD, НТВ+ HD [2011/2012, HD, 720р, RU/ITA, HDTVRip]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(99071, this); return false;" href="./viewtopic.php?t=21038">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=671">Gorlum</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>127582204268</u>
+		<a class="small tr-dl" href="./download.php?id=46065">118,82&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>2</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>3</b></td>
+	<td class="row4 small" title="Ответов: 28">76</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1337099835</u>
+		<p>15-Май-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_167203">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=174">Serie A 2011/12</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=46707"><b>Чемпионат Италии 2011-12 / 38-й тур  / Милан - Новара / Прощание / SKY  [13.05.2012,S<wbr>D,XviD,ITA,T<wbr>V]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(167203, this); return false;" href="./viewtopic.php?t=46707">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=1084">capuchino</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1328271066</u>
+		<a class="small tr-dl" href="./download.php?id=45990">1,24&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>4</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>1</b></td>
+	<td class="row4 small" title="Ответов: 7">134</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1337025688</u>
+		<p>15-Май-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_167083">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=174">Serie A 2011/12</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=46664"><b>Чемпионат Италии 2011-12 / 38-й тур / Милан — Новара / НТВ+ [13.05.2012 г., SD, XviD, RU, SAT]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(167083, this); return false;" href="./viewtopic.php?t=46664">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=5">dav7dbeck$</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1527241116</u>
+		<a class="small tr-dl" href="./download.php?id=45960">1,42&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>2</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 1">149</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1337010382</u>
+		<p>14-Май-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_166987">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=174">Serie A 2011/12</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=46640"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Чемпионат Италии 2011-12 / 38-й тур / Милан - Новара / Футбол 2 HD [13.05.2012, 1080i, H.264, RU, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(166987, this); return false;" href="./viewtopic.php?t=46640">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=78">-=ShakhtyoR=-</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>11948345828</u>
+		<a class="small tr-dl" href="./download.php?id=45927">11,13&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>2</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 14">156</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1336985794</u>
+		<p>14-Май-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_165123">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=273">VIP Май 2012</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=45994"><img src="images/tor_gold.gif" width="16" height="15" title="Золото" />&nbsp;<b>Чемпионат Италии 2011-2012 / 37-й тур / Интер - Милан / Полная версия / Sky Italia HD /  [06.05.2012, HD , 1080i, H.264, IT, HDTV]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(165123, this); return false;" href="./viewtopic.php?t=45994">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=3506">Геннадий</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>14042073440</u>
+		<a class="small tr-dl" href="./download.php?id=45379">13,08&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title=" Last seen: 
+ 5-Июн-12"><b>0</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 3">8</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1336497203</u>
+		<p>8-Май-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_164816">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=174">Serie A 2011/12</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=45890"><b>Чемпионат Италии 2011-12 / 37 тур / Интер - Милан / НТВ+ [06.05.2012, SD, XVID, RU, SATRip]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(164816, this); return false;" href="./viewtopic.php?t=45890">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=39">R1C@RDO&gt;&gt;22</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>1367930196</u>
+		<a class="small tr-dl" href="./download.php?id=45246">1,27&nbsp;GB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>7</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 21">394</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1336386006</u>
+		<p>7-Май-12</p>
+	</td>
+</tr>
+<tr class="tCenter" id="tor_164918">
+	<td class="row1"><img src="./templates/default/images/icon_minipost.gif" class="icon1" alt="post" /></td>
+	<td class="row1">						<b><span title="Проверено" style="color: green;">&radic;</span></b>							
+										</td>
+			<td class="row1"><a class="gen" href="tracker.php?f=174">Serie A 2011/12</a></td>
+		<td class="row4 med tLeft">
+		<a class="tLink2 genmed" href="./viewtopic.php?t=45922"><b>Чемпионат Италии 2011-12 / 37-й тур / Интер - Милан / SKY Sport [Футбол, 06.05.2012, SD, XviD, IT, DVB]</b></a>
+                <a class="tLink2 genmed folded2 tLink" onclick="ajax.view_post(164918, this); return false;" href="./viewtopic.php?t=45922">Быстрый просмотр</a>
+	</td>
+		<td class="row1"><a class="med" href="tracker.php?pid=5659">sabaka11</a></td>
+		
+	<td class="row4 small nowrap">
+		<u>885449176</u>
+		<a class="small tr-dl" href="./download.php?id=45207">844&nbsp;MB</a>	</td>
+	<td class="row4 seedmed" title="Seeders"><b>1</b></td>
+	<td class="row4 leechmed" title="<b>Личеров</b>"><b>0</b></td>
+	<td class="row4 small" title="Ответов: 1">71</td>
+		<td class="row4 small nowrap" style="padding: 1px 3px 2px;" title="Добавлен">
+		<u>1336366857</u>
+		<p>7-Май-12</p>
+	</td>
+</tr>
+
+<tfoot>
+<tr>
+	<td class="catBottom" colspan="11">&nbsp;</td>
+</tr>
+</tfoot>
+</table>
+
+<div class="bottom_info">
+
+	<div class="nav">
+		<p style="float: left">Страница <b>1</b> из <b>11</b></p>
+		<p style="float: right"><a class="menu-root" href="#pg-jump">Страницы</a>:&nbsp;&nbsp;<b>1</b>, <a href="tracker.php?search_id=37p1HX0FwwB7&amp;start=50">2</a>, <a href="tracker.php?search_id=37p1HX0FwwB7&amp;start=100">3</a>&nbsp;...&nbsp;<a href="tracker.php?search_id=37p1HX0FwwB7&amp;start=400">9</a>, <a href="tracker.php?search_id=37p1HX0FwwB7&amp;start=450">10</a>, <a href="tracker.php?search_id=37p1HX0FwwB7&amp;start=500">11</a>&nbsp;&nbsp;<a href="tracker.php?search_id=37p1HX0FwwB7&amp;start=50">След.</a></p>
+		<div class="clear"></div>
+	</div>
+
+	<div class="spacer_4"></div>
+	<div class="clear"></div>
+
+</div><!--/bottom_info-->
+
+<script type="text/javascript">
+
+//$.each( [7], function(i,n){ $('#fs-'+ n).attr('selected', 1) });
+$('#search_opt, #search-results').show();
+
+var fs_all = '';
+var fs_og = [];
+var fs_lb = [];
+var show_fs_nav = true;
+
+$(document).ready(function(){
+if (user.opt_js.h_tsp) {
+	$('a.tLink2').each(function(){
+		$(this).html( $(this).html().replace(/\{.+?\}/g, '{...}') );
+	});
+}
+	$('#fs optgroup').each(function(i){
+		var $og = $(this);
+		$og.attr({ id: 'og-'+i });
+		fs_og[i] = $(this).html();
+		fs_lb[i] = $(this).attr('label');
+		$('#fs-sel-cat').append('<option class="cat-title" value="'+ i +'">&nbsp;&nbsp;&middot;&nbsp;'+ fs_lb[i] +'&nbsp;</option>');
+		if (show_fs_nav) {
+			$('#fs-nav').append('<li><span class="b" onclick="$(\'#fs\').scrollTo(\'#og-'+i+'\')">'+ fs_lb[i] +'</span><ul id="nav-c-'+ i +'"></ul></li>');
+			$('option', $og).each(function(){
+				var $op = $(this);
+				if ($op[0].className) {
+					$('<li><span class="f">'+ $op.html() +'</span></li>').appendTo('#nav-c-'+ i).click(function(){
+						$('#fs').scrollTo( '#'+$op.attr('id'), { axis:'y' } ).scrollTo( '-=5px' );
+						$('#fs option').attr({ selected: 0 });
+						$('#'+$op.attr('id')).attr({ selected: 1 });
+					});
+				}
+			});
+		}
+	});
+
+	if (show_fs_nav) {
+		$('#fs-nav-menu').show();
+		$('#fs-nav').treeview({ collapsed: true });
+	}
+	else {
+		$('#fs-nav-menu').remove();
+	}
+
+	$('#fs-sel-cat').bind('change', function(){
+		var i = $(this).val();
+		// РµР±..СЏ РѕРїРµСЂР° РЅРµ РїРѕРЅРёРјР°РµС‚ <optgroup> РїСЂРё РїРѕРїСѓР»СЏС†РёРё СЃРµР»РµРєС‚Р° [http://dev.jquery.com/ticket/3040]
+		if ($.browser.opera) {
+			if (i == 'all') {
+				$('#fs').empty().append('<option id="fs--1" value="-1">&nbsp;Все имеющиеся</option>');
+				$.each(fs_og, function(i, v){
+				 $('#fs').append( $(document.createElement('optgroup')).attr('label', fs_lb[i]).append(fs_og[i]) );
+				});
+				$('#fs-nav-menu').show();
+			}
+			else {
+				$('#fs').empty().append( $(document.createElement('optgroup')).attr('label', fs_lb[i]).append(fs_og[i]) );
+				$('#fs-nav-menu').hide();
+			}
+		}
+		else {
+			if (i == 'all') {
+				var fs_html = fs_all;
+				$('#fs-nav-menu').show();
+			}
+			else {
+				var fs_html = '<optgroup label="'+ fs_lb[i] +'">'+ fs_og[i] +'</optgroup>';
+				$('#fs-nav-menu').hide();
+			}
+			$('#fs').html(fs_html).focus();
+		}
+	});
+
+	fs_all = $('#fs').html();
+	$('#fs').css({width: $('#fs').width() +'px'});
+});
+
+function get_fs_link ()
+{
+	var fs_url = 'http://rgfootball.net/tracker.php?';
+	var fs_val = $('#fs').val();
+ 
+	if (fs_val == null) {
+		alert('Вы не выбрали разделы');
+	}
+	else {
+		fs_url += 'f[]='+ fs_val.join('&f[]=');
+		window.prompt('Ссылка на выбранные разделы:', fs_url);
+	}
+	return false;
+}
+</script>
+	</div><!--/main_content_wrap-->
+	</td><!--/main_content-->
+
+	
+	</tr></table>
+	</div>
+	<!--/page_content-->
+
+	<!--page_footer-->
+	<div id="page_footer">
+
+		<div class="clear"></div>
+<div class="copyright">
+			<p align="center"><a href="groupcp.php?g=1">Администраторы</a> · <a href="groupcp.php?g=42">Модераторы</a> · <a href="groupcp.php?g=23">Релиз группа · <a href="#" onclick="return post2url('torrent.php', {rand_rel: 1});">Случайная раздача</a></p>
+		</div>
+
+<div class="copyright">
+			<p align="center"><a href="viewtopic.php?t=22304" onclick="window.open(this.href, '', InfoWinParams); return false;">Реклама на сайте</a> · <a href="misc.php?do=info&show=copyright_holders" onclick="window.open(this.href, '', InfoWinParams); return false;">Для правообладателей</a> · <a href="misc.php?do=info&show=user_agreement" onclick="window.open(this.href, '', InfoWinParams); return false;">Пользовательское Соглашение</a>
+		</div>
+
+<br>
+ 
+
+			
+
+<center>
+<br>
+<noindex>
+<div id="banners">
+<!--LiveInternet counter--><script type="text/javascript"><!--
+document.write("<a href='http://www.liveinternet.ru/click' "+
+"target=_blank><img src='//counter.yadro.ru/hit?t11.6;r"+
+escape(document.referrer)+((typeof(screen)=="undefined")?"":
+";s"+screen.width+"*"+screen.height+"*"+(screen.colorDepth?
+screen.colorDepth:screen.pixelDepth))+";u"+escape(document.URL)+
+";"+Math.random()+
+"' title='LiveInternet:В° 24"+
+"' "+
+"border='0' width='88' height='31'><\/a>")
+//--></script><!--/LiveInternet-->
+<!-- Yandex.Metrika informer -->
+<a href="http://metrika.yandex.ru/stat/?id=3149845&amp;from=informer"
+target="_blank"><img src="//bs.yandex.ru/informer/3149845/3_1_FFFFFFFF_EFEFEFFF_0_pageviews"
+width="88" height="31" border="0" /></a>
+<!-- /Yandex.Metrika informer -->
+
+<!-- Yandex.Metrika counter -->
+<div style="display:none;"><script type="text/javascript">
+(function(w, c) {
+    (w[c] = w[c] || []).push(function() {
+        try {
+            w.yaCounter3149845 = new Ya.Metrika(3149845);
+             yaCounter3149845.clickmap(true);
+             yaCounter3149845.trackLinks(true);
+        
+        } catch(e) {}
+    });
+})(window, 'yandex_metrika_callbacks');
+</script></div>
+<script src="//mc.yandex.ru/metrika/watch.js" type="text/javascript" defer="defer"></script>
+<noscript><div style="position:absolute"><img src="//mc.yandex.ru/watch/3149845" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+
+
+</center>
+</div>
+
+             
+		<div class="copyright tleft" align="center">
+			<div class="copyright">Powered by TorrentPier &copy; Modified by <a href="http://rgfootball.net/profile.php?mode=viewprofile&u=5573">yamaha</a>. Graphic by <a href="http://www.rgfootball.net/profile.php?mode=viewprofile&u=13">fuxxer</a>. Copyright 2010-2012 &copy; RG Football Team <br>Форум представлен на базе <a href="http://www.phpbb.com">phpBB</a> &copy; phpBB Group. Search powered by <a href="http://sphinxsearch.com/">© SphinxSearch</a>. Tracker powered by <a href="http://xbtt.sourceforge.net/">© XBTT</a>.</div>		</div>
+</noindex>
+	</div>
+
+	<!--/page_footer -->
+
+	</div>
+	<!--/page_container -->
+
+
+	</div><!--/body_container-->
+
+	</body>
+	</html>
