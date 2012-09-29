@@ -1,7 +1,6 @@
 # encoding: utf-8
 require 'spec_helper'
 
-
 module TrackerApi
   describe RgFootball do
     before(:each) do
