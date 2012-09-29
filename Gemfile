@@ -5,6 +5,7 @@ gem 'nokogiri'
 gem 'eventmachine'
 gem 'em-http-request'
 gem 'eventmachine_httpserver'
+gem 'yajl-ruby'
 
 # test
 gem 'fakeweb'
